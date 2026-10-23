@@ -1,0 +1,33 @@
+# Terraform working folders and state. State can contain secrets.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+
+# Variable files often hold secrets or environment details
+*.tfvars
+*.tfvars.json
+
+# Local overrides and CLI config
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Lambda build output
+build/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local env and editor files
+.env
+.vscode/
