@@ -1,0 +1,5 @@
+[tools]
+gitleaks = "8.30.1"
+python = "3.13.17"
+terraform = "1.17.0"
+tflint = "0.65.0"
