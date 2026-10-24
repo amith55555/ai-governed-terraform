@@ -31,3 +31,5 @@ __pycache__/
 # Local env and editor files
 .env
 .vscode/
+
+terraform/modules/**/.terraform.lock.hcl
