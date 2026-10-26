@@ -23,4 +23,5 @@ variable "alarm_email" {
   type        = string
   description = "Email address to receive CloudWatch alarm notifications"
   default     = null
+  sensitive   = true
 }
