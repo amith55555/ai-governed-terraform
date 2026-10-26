@@ -1,0 +1,2 @@
+aws_account_id = "123456789012"
+alarm_email = "alarm_email@gmail.com"
