@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := help
+DEV_DIR := terraform/envs/dev
 .PHONY: help check test plan up down
 
 help: ## List available targets
@@ -11,10 +12,14 @@ test: ## Run tests
 	@echo "test: not implemented yet"
 
 plan: ## Terraform plan (dev)
-	@echo "plan: not implemented yet"
+	terraform -chdir=$(DEV_DIR) init -input=false
+	terraform -chdir=$(DEV_DIR) plan
 
-up: ## Create the dev environment
-	@echo "up: not implemented yet"
+up: ## Create or update the dev environment
+	terraform -chdir=$(DEV_DIR) init -input=false
+	terraform -chdir=$(DEV_DIR) apply
+	@echo "API endpoint: $$(terraform -chdir=$(DEV_DIR) output -raw api_endpoint)"
 
 down: ## Destroy the dev environment
-	@echo "down: not implemented yet"
+	terraform -chdir=$(DEV_DIR) init -input=false
+	terraform -chdir=$(DEV_DIR) destroy
