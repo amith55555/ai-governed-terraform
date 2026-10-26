@@ -47,3 +47,9 @@ variable "log_retention_days" {
     error_message = "log_retention_days must be one of: 1, 3, 5, 7, 14, 30, 60, 90."
   }
 }
+
+variable "permissions_boundary" {
+  type        = string
+  description = "ARN of the IAM permissions boundary to apply to the Lambda function's role"
+  default     = null
+}

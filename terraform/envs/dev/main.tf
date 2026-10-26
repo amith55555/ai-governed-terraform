@@ -17,14 +17,15 @@ module "bucket" {
 }
 
 module "lambda" {
-  source             = "../../modules/lambda_function"
-  name               = "${local.name_prefix}-api"
-  source_dir         = "${path.module}/../../../app"
-  table_name         = module.table.table_name
-  table_arn          = module.table.table_arn
-  bucket_name        = module.bucket.bucket_name
-  bucket_arn         = module.bucket.bucket_arn
-  log_retention_days = 7
+  source               = "../../modules/lambda_function"
+  name                 = "${local.name_prefix}-api"
+  source_dir           = "${path.module}/../../../app"
+  table_name           = module.table.table_name
+  table_arn            = module.table.table_arn
+  bucket_name          = module.bucket.bucket_name
+  bucket_arn           = module.bucket.bucket_arn
+  log_retention_days   = 7
+  permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
 }
 
 module "api" {
