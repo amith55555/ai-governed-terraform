@@ -1,6 +1,7 @@
 output "api_endpoint" {
   description = "The endpoint of the HTTP API"
   value       = module.api.api_endpoint
+  sensitive   = true
 }
 
 output "table_name" {

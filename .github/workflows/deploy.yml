@@ -1,0 +1,117 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+  TF_VAR_alarm_email: ${{ secrets.ALARM_EMAIL }}
+
+jobs:
+  dev:
+    name: Deploy dev
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: terraform/envs/dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
+
+      - name: Log in to AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aigt-ci-apply-dev
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: deploy-dev-${{ github.run_id }}
+
+      - name: terraform init
+        run: terraform init -input=false
+
+      - name: terraform plan
+        run: terraform plan -input=false -no-color -lock-timeout=120s -out=tfplan
+
+      - name: terraform apply
+        run: terraform apply -input=false -no-color -lock-timeout=120s tfplan
+
+      - name: Smoke test
+        run: |
+          API=$(terraform output -raw api_endpoint)
+          echo "::add-mask::$API"
+
+          curl --fail -sS --retry 5 --retry-delay 3 --retry-all-errors "$API/health" \
+            | python3 -c 'import sys, json; assert json.load(sys.stdin)["status"] == "ok"'
+          echo "health: OK"
+
+          ID=$(curl --fail -sS -X POST "$API/items" -H 'Content-Type: application/json' -d '{"name": "smoke-test"}' \
+            | python3 -c 'import sys, json; print(json.load(sys.stdin)["id"])')
+          curl --fail -sS "$API/items/$ID" \
+            | python3 -c 'import sys, json; assert json.load(sys.stdin)["name"] == "smoke-test"'
+          echo "create and read back: OK"
+
+  prod:
+    name: Deploy prod
+    needs: dev
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: terraform/envs/prod
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned tools
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
+
+      - name: Log in to AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/aigt-ci-apply-prod
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: deploy-prod-${{ github.run_id }}
+
+      - name: terraform init
+        run: terraform init -input=false
+
+      - name: terraform plan
+        run: terraform plan -input=false -no-color -lock-timeout=120s -out=tfplan
+
+      - name: terraform apply
+        run: terraform apply -input=false -no-color -lock-timeout=120s tfplan
+
+      - name: Smoke test
+        run: |
+          API=$(terraform output -raw api_endpoint)
+          echo "::add-mask::$API"
+
+          curl --fail -sS --retry 5 --retry-delay 3 --retry-all-errors "$API/health" \
+            | python3 -c 'import sys, json; assert json.load(sys.stdin)["status"] == "ok"'
+          echo "health: OK"
