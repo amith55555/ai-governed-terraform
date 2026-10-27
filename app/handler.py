@@ -55,7 +55,7 @@ def parse_body(event):
 
 
 def health(event):
-    return response(200, {"status": "ok"})
+    return response(200, {"status": "ok", "service": "items-api"})
 
 
 def create_item(event):
