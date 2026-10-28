@@ -6,7 +6,7 @@ locals {
 
 module "table" {
   source              = "../../modules/dynamodb_table"
-  name                = "${local.name_prefix}-items-v2"
+  name                = "${local.name_prefix}-items"
   deletion_protection = false
 }
 
