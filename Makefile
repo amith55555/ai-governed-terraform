@@ -5,8 +5,11 @@ DEV_DIR := terraform/envs/dev
 help: ## List available targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-7s %s\n", $$1, $$2}'
 
-check: ## Run all local checks (same as CI)
-	@echo "check: not implemented yet"
+check: scan ## Run all local checks (same as CI)
+	@echo "check: all checks passed"
+
+scan: ## Security scan (Checkov plus guards)
+	bash scripts/scan.sh
 
 test: ## Run tests
 	@echo "test: not implemented yet"

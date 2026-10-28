@@ -1,0 +1,28 @@
+framework:
+  - terraform
+skip-download: true
+soft-fail: false
+compact: true
+quiet: true
+
+skip-check:
+  # --- Encryption with our own KMS key (data is already encrypted by AWS) ---
+  - CKV_AWS_145 # S3 bucket without own KMS key
+  - CKV_AWS_119 # DynamoDB table without own KMS key
+  - CKV_AWS_26  # SNS topic not encrypted (alarms would need a paid KMS key)
+  - CKV_AWS_158 # Log groups without own KMS key
+  - CKV_AWS_173 # Lambda env vars without own KMS key (no secrets in them)
+  # --- S3 extras not needed at this size ---
+  - CKV_AWS_18  # S3 access logging
+  - CKV_AWS_144 # S3 cross-region replication
+  - CKV2_AWS_62 # S3 event notifications
+  # --- Logging and tracing ---
+  - CKV_AWS_338 # Log retention under 1 year (7 days dev, 30 days prod)
+  - CKV_AWS_50  # Lambda X-Ray tracing (needs wildcard IAM; HTTP API has no X-Ray)
+  # --- Lambda features that do not fit this design ---
+  - CKV_AWS_116 # Dead-letter queue (only works for async calls; API calls are sync)
+  - CKV_AWS_117 # Lambda in a VPC (no VPC in the 3-week version)
+  - CKV_AWS_272 # Code signing (only CI deploys code, from the reviewed repo)
+  - CKV_AWS_115 # Reserved concurrency (account limit is 10, none can be reserved)
+  # --- OPEN RISK: public API without login (see ADR section "Open risk") ---
+  - CKV_AWS_309 # API routes without authorization
