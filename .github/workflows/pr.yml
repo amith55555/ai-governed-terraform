@@ -28,6 +28,9 @@ jobs:
       - name: Policy tests and source policy (before any init)
         run: make policy
 
+      - name: Risk gate unit tests
+        run: make risk-test
+
       - name: terraform fmt
         run: terraform fmt -check -recursive -diff terraform/
 
@@ -111,6 +114,17 @@ jobs:
       - name: Policies on the plan
         run: make -C ../../.. plan-policy PLAN=terraform/envs/${{ matrix.env }}/plan.json
 
+      - name: Risk level
+        run: make -C ../../.. risk PLAN=terraform/envs/${{ matrix.env }}/plan.json OUT=terraform/envs/${{ matrix.env }}/risk.json
+
+      - name: Upload risk report (levels and addresses only)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: risk-${{ matrix.env }}
+          path: terraform/envs/${{ matrix.env }}/risk.json
+          retention-days: 3
+          if-no-files-found: error
+
       - name: Save plan as text
         run: |
           terraform show -no-color tfplan > plan.txt
@@ -126,7 +140,7 @@ jobs:
 
   comment:
     name: Plan comment
-    needs: plan
+    needs: [plan, risk]
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -139,8 +153,16 @@ jobs:
           pattern: plan-*
           path: plans
 
+      - name: Download risk reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: risk-*
+          path: risks
+
       - name: Create or update the plan comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RISK_LEVEL: ${{ needs.risk.outputs.level }}
         with:
           script: |
             const fs = require('fs');
@@ -149,6 +171,19 @@ jobs:
             const sha = context.payload.pull_request.head.sha.slice(0, 7);
 
             let body = `${marker}\n## Terraform plan for \`${sha}\`\n`;
+
+            const level = process.env.RISK_LEVEL || 'unknown';
+            const icon = { low: '🟢', medium: '🟡', high: '🔴' }[level] || '⚪';
+            body += `\n### Risk: ${icon} ${level}\n`;
+            if (level === 'high') {
+              body += 'This plan needs approval in the **risk-approval** environment before it can be merged.\n';
+            }
+            for (const env of ['dev', 'prod']) {
+              const risk = JSON.parse(fs.readFileSync(`risks/risk-${env}/risk.json`, 'utf8'));
+              for (const r of risk.reasons) {
+                body += `- ${env}: **${r.level}** \`${r.address}\`: ${r.detail} (${r.rule})\n`;
+              }
+            }
 
             for (const env of ['dev', 'prod']) {
               let text = fs.readFileSync(`plans/plan-${env}/plan.txt`, 'utf8');
@@ -169,3 +204,51 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+  risk:
+    name: Risk gate
+    needs: plan
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      level: ${{ steps.level.outputs.level }}
+    steps:
+      - name: Download risk reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: risk-*
+          path: risk
+
+      - name: Overall risk level
+        id: level
+        run: |
+          files=(risk/risk-*/risk.json)
+          if [ "${#files[@]}" -ne 2 ]; then
+            echo "FAIL: expected 2 risk reports (dev and prod), found ${#files[@]}"
+            exit 1
+          fi
+          level=$(jq -s -r '[.[].level] | if index("high") then "high" elif index("medium") then "medium" else "low" end' "${files[@]}")
+          echo "level=$level" >> "$GITHUB_OUTPUT"
+          echo "Overall risk level: $level"
+          {
+            echo "## Risk level: $level"
+            for f in "${files[@]}"; do
+              env_name=$(basename "$(dirname "$f")")
+              echo "### ${env_name#risk-}"
+              jq -r '.reasons[] | "- **\(.level)** `\(.address)`: \(.detail) (\(.rule))"' "$f"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  risk-approval:
+    name: Risk approval
+    needs: risk
+    if: needs.risk.outputs.level == 'high'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: risk-approval
+    permissions: {}
+    steps:
+      - name: Approved
+        run: echo "High-risk plan approved by a required reviewer of the risk-approval environment."
