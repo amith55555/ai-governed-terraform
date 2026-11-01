@@ -6,7 +6,7 @@ RANGE ?= origin/main..HEAD
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-check: policy risk-test static test secrets scan ## Run all local checks (same as CI)
+check: policy risk-test static test secrets scan agents-md ## Run all local checks (same as CI)
 	@echo "check: all checks passed"
 
 static: ## fmt, validate, tflint
@@ -19,6 +19,9 @@ scan: ## Security scan (Checkov plus guards)
 
 secrets: ## Secret scan of commits in RANGE (default: origin/main..HEAD)
 	gitleaks git --redact --verbose --no-banner --log-opts="$(RANGE)" .
+
+agents-md: ## AGENTS.md: length limit and links to real files
+	bash scripts/check-agents-md.sh
 
 policy: ## Policy unit tests and source-code policy (no AWS needed)
 	conftest verify --policy policies/terraform
