@@ -43,6 +43,13 @@ in CI too.
 
 ## Known limits
 
+- **A hook that cannot start fails open.** Claude Code treats any exit code
+  other than 2 as a non-blocking error and runs the tool. Found in the live
+  test: the Windows build of Claude Code had no `python3`, every hook failed,
+  and the agent read a (fake) secret file. Fixed: the guard's command ends
+  with `|| exit 2`, and a test checks it.
+- **Claude Code must run inside WSL/Linux**, where the hooks' `python3`
+  exists. The Windows build started from a WSL terminal does not qualify.
 - **Identity:** allowed commands (`git push`, `gh pr create`) still use the
   owner's credentials. W2.8 gives the agent its own limited token.
 - **Owner's AWS session:** the guard blocks AWS commands, but the owner logs

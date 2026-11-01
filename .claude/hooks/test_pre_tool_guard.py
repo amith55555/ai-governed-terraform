@@ -226,6 +226,22 @@ class Wiring(unittest.TestCase):
         result = self.run_script("this is not json")
         self.assertEqual(result.returncode, 2)
 
+class Settings(unittest.TestCase):
+    """If the guard cannot even start (for example, no python3), Claude Code treats that
+    as a non-blocking error and runs the tool anyway. The command must turn it into a block.
+    Found in the W2.6 live test (Claude Code on Windows had no python3)."""
+
+    def test_guard_command_fails_closed(self):
+        with open(os.path.join(HERE, "..", "settings.json"), encoding="utf-8") as f:
+            settings = json.load(f)
+        commands = [h["command"] for entry in settings["hooks"]["PreToolUse"] for h in entry["hooks"]]
+        self.assertTrue(commands)
+        for command in commands:
+            self.assertTrue(command.rstrip().endswith("|| exit 2"), command)
+
+    def test_missing_interpreter_becomes_a_block(self):
+        result = subprocess.run(["bash", "-c", "no-such-python-xyz -I guard.py || exit 2"], capture_output=True)
+        self.assertEqual(result.returncode, 2)
 
 if __name__ == "__main__":
     unittest.main()
