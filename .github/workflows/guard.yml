@@ -27,7 +27,7 @@ jobs:
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
           CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
-          PROTECTED: '^(\.github/|policies/|scripts/|risk/|terraform/bootstrap/|\.claude/|mcp-servers/)|^(Makefile|mise\.toml|\.pre-commit-config\.yaml|\.tflint\.hcl|AGENTS\.md|CLAUDE\.md|\.mcp\.json)$'
+          PROTECTED: '^(\.github/|policies/|scripts/|risk/|terraform/bootstrap/|\.claude/|mcp-servers/|\.config/|mise/)|^(Makefile|GNUmakefile|makefile|mise\.toml|\.mise\.toml|mise\.local\.toml|\.mise\.local\.toml|\.tool-versions|\.terraform-version|\.python-version|\.pre-commit-config\.yaml|\.tflint\.hcl|\.gitleaks\.toml|\.gitleaksignore|conftest\.toml|AGENTS\.md|CLAUDE\.md|\.mcp\.json)$'
         run: |
           gh api --paginate "repos/$REPO/pulls/$PR/files" \
             --jq '.[] | .filename + "\t" + (.previous_filename // "")' > files.tsv

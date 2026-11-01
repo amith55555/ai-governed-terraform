@@ -32,6 +32,9 @@ jobs:
       - name: Risk gate unit tests
         run: make risk-test
 
+      - name: Hook attack tests
+        run: make hook-test
+
       - name: fmt, validate, tflint
         run: make static
 

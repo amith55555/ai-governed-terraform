@@ -1,4 +1,9 @@
 # Owners of the guardrails.
+# GitHub cannot require a code-owner review from the only maintainer, so these
+# paths are enforced by .github/workflows/guard.yml (approval in the
+# guardrail-approval environment) and locally by .claude/hooks/pre_tool_guard.py.
+# .claude/hooks/test_protected_lists.py fails if the three lists disagree.
+# See docs/adr/0004-protected-paths.md and docs/adr/0005-agent-hooks.md.
 
 /.github/                   @amith55555
 /policies/                  @amith55555
@@ -7,10 +12,23 @@
 /terraform/bootstrap/       @amith55555
 /.claude/                   @amith55555
 /mcp-servers/               @amith55555
+/.config/                   @amith55555
+/mise/                      @amith55555
 /Makefile                   @amith55555
+/GNUmakefile                @amith55555
+/makefile                   @amith55555
 /mise.toml                  @amith55555
+/.mise.toml                 @amith55555
+/mise.local.toml            @amith55555
+/.mise.local.toml           @amith55555
+/.tool-versions             @amith55555
+/.terraform-version         @amith55555
+/.python-version            @amith55555
 /.pre-commit-config.yaml    @amith55555
 /.tflint.hcl                @amith55555
+/.gitleaks.toml             @amith55555
+/.gitleaksignore            @amith55555
+/conftest.toml              @amith55555
 /AGENTS.md                  @amith55555
 /CLAUDE.md                  @amith55555
 /.mcp.json                  @amith55555
