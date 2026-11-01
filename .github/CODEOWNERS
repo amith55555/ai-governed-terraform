@@ -1,0 +1,16 @@
+# Owners of the guardrails.
+
+/.github/                   @amith55555
+/policies/                  @amith55555
+/scripts/                   @amith55555
+/risk/                      @amith55555
+/terraform/bootstrap/       @amith55555
+/.claude/                   @amith55555
+/mcp-servers/               @amith55555
+/Makefile                   @amith55555
+/mise.toml                  @amith55555
+/.pre-commit-config.yaml    @amith55555
+/.tflint.hcl                @amith55555
+/AGENTS.md                  @amith55555
+/CLAUDE.md                  @amith55555
+/.mcp.json                  @amith55555

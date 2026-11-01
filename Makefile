@@ -18,7 +18,7 @@ scan: ## Security scan (Checkov plus guards)
 	bash scripts/scan.sh
 
 secrets: ## Secret scan of commits in RANGE (default: origin/main..HEAD)
-	gitleaks git --redact --no-banner --log-opts="$(RANGE)" .
+	gitleaks git --redact --verbose --no-banner --log-opts="$(RANGE)" .
 
 policy: ## Policy unit tests and source-code policy (no AWS needed)
 	conftest verify --policy policies/terraform
