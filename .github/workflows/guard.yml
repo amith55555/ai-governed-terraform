@@ -1,0 +1,62 @@
+name: guard
+
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  paths:
+    name: Protected paths
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      touched: ${{ steps.check.outputs.touched }}
+    steps:
+      - name: Match changed files against protected paths
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          PROTECTED: '^(\.github/|policies/|scripts/|risk/|terraform/bootstrap/|\.claude/|mcp-servers/)|^(Makefile|mise\.toml|\.pre-commit-config\.yaml|\.tflint\.hcl|AGENTS\.md|CLAUDE\.md|\.mcp\.json)$'
+        run: |
+          gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | .filename + "\t" + (.previous_filename // "")' > files.tsv
+          listed=$(wc -l < files.tsv)
+          echo "Files in PR: $CHANGED_FILES, listed by the API: $listed"
+
+          hits=$(tr '\t' '\n' < files.tsv | grep -E "$PROTECTED" | sort -u || true)
+          touched=false
+          if [ -n "$hits" ]; then
+            touched=true
+            echo "Protected paths changed:"
+            echo "$hits"
+          fi
+          if [ "$listed" -lt "$CHANGED_FILES" ]; then
+            touched=true
+            echo "The API listed fewer files than the PR has (3000 limit): treating as protected."
+          fi
+
+          echo "touched=$touched" >> "$GITHUB_OUTPUT"
+          echo "Protected paths touched: $touched"
+
+  approval:
+    name: Protected paths approval
+    needs: paths
+    if: needs.paths.outputs.touched == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: guardrail-approval
+    permissions: {}
+    steps:
+      - name: Approved
+        run: echo "Change to protected paths approved by a required reviewer of guardrail-approval."

@@ -1,15 +1,24 @@
 .DEFAULT_GOAL := help
 DEV_DIR := terraform/envs/dev
-.PHONY: help check scan policy plan-policy risk risk-test test plan up down
+RANGE ?= origin/main..HEAD
+.PHONY: help check static scan secrets policy plan-policy risk risk-test test plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
 
-check: scan policy risk-test ## Run all local checks (same as CI)
+check: policy risk-test static test secrets scan ## Run all local checks (same as CI)
 	@echo "check: all checks passed"
+
+static: ## fmt, validate, tflint
+	terraform fmt -check -recursive -diff terraform/
+	bash scripts/validate.sh
+	tflint --recursive
 
 scan: ## Security scan (Checkov plus guards)
 	bash scripts/scan.sh
+
+secrets: ## Secret scan of commits in RANGE (default: origin/main..HEAD)
+	gitleaks git --redact --verbose --no-banner --log-opts="$(RANGE)" .
 
 policy: ## Policy unit tests and source-code policy (no AWS needed)
 	conftest verify --policy policies/terraform
@@ -27,8 +36,8 @@ risk: ## Risk level of a plan JSON: make risk PLAN=plan.json OUT=risk.json
 risk-test: ## Unit tests for the risk gate
 	python3 -m unittest discover -s risk -v
 
-test: ## Run tests
-	@echo "test: not implemented yet"
+test: ## terraform test for modules with a tests/ folder (mock AWS)
+	bash scripts/tf-test.sh
 
 plan: ## Terraform plan (dev)
 	terraform -chdir=$(DEV_DIR) init -input=false
