@@ -26,4 +26,3 @@ skip-check:
   - CKV_AWS_115 # Reserved concurrency (account limit is 10, none can be reserved)
   # --- OPEN RISK: public API without login (see ADR section "Open risk") ---
   - CKV_AWS_309 # API routes without authorization
-  - CKV_AWS_53  # planted: silence a public-access finding
