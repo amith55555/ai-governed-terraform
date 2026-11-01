@@ -11,6 +11,15 @@ if [ -n "$json_files" ]; then
 fi
 echo "ok"
 
+echo "== Guard: test files use only mock providers and no external modules"
+bad_tests="$(grep -rnE '^\s*(source\s*=|provider\s+")' --include='*.tftest.hcl' terraform || true)"
+if [ -n "$bad_tests" ]; then
+  echo "$bad_tests"
+  echo "FAIL: .tftest.hcl files may not load modules (source =) or configure real providers (only mock_provider)."
+  exit 1
+fi
+echo "ok"
+
 echo "== Conftest: escape hatches in .tf files"
 mapfile -t tf_files < <(find terraform -name '*.tf' -not -path '*/.terraform/*' | sort)
 if [ "${#tf_files[@]}" -eq 0 ]; then
