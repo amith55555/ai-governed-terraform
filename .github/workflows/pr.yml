@@ -43,6 +43,9 @@ jobs:
           RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
         run: make secrets RANGE="$RANGE"
 
+      - name: AGENTS.md length and links
+        run: make agents-md
+
   scan:
     name: Security scan
     runs-on: ubuntu-24.04
