@@ -24,6 +24,7 @@ module "lambda" {
   table_arn            = module.table.table_arn
   bucket_name          = module.bucket.bucket_name
   bucket_arn           = module.bucket.bucket_arn
+  memory_size          = 256
   log_retention_days   = 30
   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
 }
