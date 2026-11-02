@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
-.PHONY: help agent check static scan secrets agents-md hook-test policy plan-policy risk risk-test test plan up down
+.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -9,7 +9,7 @@ help: ## List available targets
 agent: ## Start Claude Code as the agent (own limited token, no AWS session)
 	bash scripts/agent-session.sh
 
-check: policy risk-test hook-test static test secrets scan agents-md ## Run all local checks (same as CI)
+check: policy risk-test hook-test usage-test static test secrets scan agents-md ## Run all local checks (same as CI)
 	@echo "check: all checks passed"
 
 static: policy ## fmt, validate, tflint (escape-hatch policy runs first)
@@ -28,6 +28,12 @@ agents-md: ## AGENTS.md and skills: length, front matter, links to real files
 
 hook-test: ## Attack tests for the agent hooks
 	python3 -I -m unittest discover -s .claude/hooks -v
+
+usage: ## Token usage per agent session -> benchmarks/results/usage.csv
+	python3 -I benchmarks/usage.py
+
+usage-test: ## Unit tests for the usage report
+	python3 -I -m unittest discover -s benchmarks -v
 
 policy: ## Policy unit tests and source-code policy (no AWS needed)
 	conftest verify --policy policies/terraform

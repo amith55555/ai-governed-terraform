@@ -13,7 +13,7 @@ API Gateway HTTP API -> Python Lambda -> DynamoDB table and a private S3 bucket,
 | `terraform/modules/` | dynamodb_table, s3_bucket, lambda_function, http_api, alarms | yes |
 | `terraform/envs/dev`, `terraform/envs/prod` | the same modules with different inputs | yes |
 | `app/handler.py` | Lambda code | yes |
-| `docs/` (except `docs/adr/`) | notes, agent log | yes |
+| `docs/` (except `docs/adr/` and `docs/agent-log.md`) | notes | yes |
 | everything else | guardrails, CI, bootstrap, agent config | **no** (see F3) |
 
 Only CI changes AWS. You propose changes as a pull request; CI plans, checks and applies.

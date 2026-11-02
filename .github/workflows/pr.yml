@@ -35,6 +35,9 @@ jobs:
       - name: Hook attack tests
         run: make hook-test
 
+      - name: Usage report tests
+        run: make usage-test
+
       - name: fmt, validate, tflint
         run: make static
 

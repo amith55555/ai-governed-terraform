@@ -16,7 +16,7 @@ EDITABLE = [
     "terraform/modules/s3_bucket/main.tf",
     "terraform/envs/dev/main.tf",
     "app/handler.py",
-    "docs/agent-log.md",
+    "docs/notes.md",
     "README.md",
     "Makefile.bak/x",
     "scripts.md",
