@@ -43,6 +43,13 @@ in CI too.
 
 ## Known limits
 
+- **The completion hook cannot tell whose changes it checks.** Any
+  uncommitted change makes it run, so a read-only task can be blocked by the
+  owner's own work in progress (seen in the W2.7 live test). Possible fix:
+  record the git state at session start and only check what changed since.
+- **Fixed after the W2.7 live test:** "same error twice" never fired, because
+  gitleaks prints timestamps and durations. The failure fingerprint now
+  ignores numbers, and a test covers it.
 - **A hook that cannot start fails open.** Claude Code treats any exit code
   other than 2 as a non-blocking error and runs the tool. Found in the live
   test: the Windows build of Claude Code had no `python3`, every hook failed,

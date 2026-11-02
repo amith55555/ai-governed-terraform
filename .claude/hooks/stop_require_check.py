@@ -37,13 +37,16 @@ def has_changes(root):
 def tail(text, lines=TAIL_LINES):
     return "\n".join(text.strip().splitlines()[-lines:])
 
+def fingerprint(output):
+    """Hash of the failure, ignoring numbers: timestamps, durations and byte counts change on every run."""
+    return hashlib.sha256(re.sub(r"\d+", "N", tail(output)).encode()).hexdigest()
 
 def decide(state, passed, output):
     """Pure decision logic. Returns (allow_stop, new_state, message)."""
     if passed:
         return True, {"attempts": 0, "last_hash": None}, None
     attempts = state.get("attempts", 0) + 1
-    digest = hashlib.sha256(tail(output).encode()).hexdigest()
+    digest = fingerprint(output)
     if digest == state.get("last_hash"):
         return True, {"attempts": 0, "last_hash": None}, (
             "make check failed with the same error twice in a row: stopping. A human needs to look."

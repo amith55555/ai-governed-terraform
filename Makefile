@@ -20,7 +20,7 @@ scan: ## Security scan (Checkov plus guards)
 secrets: ## Secret scan of commits in RANGE (default: origin/main..HEAD)
 	gitleaks git --redact --verbose --no-banner --log-opts="$(RANGE)" .
 
-agents-md: ## AGENTS.md: length limit and links to real files
+agents-md: ## AGENTS.md and skills: length, front matter, links to real files
 	bash scripts/check-agents-md.sh
 
 hook-test: ## Attack tests for the agent hooks

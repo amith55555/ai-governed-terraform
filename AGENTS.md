@@ -32,6 +32,8 @@ Only CI changes AWS. You propose changes as a pull request; CI plans, checks and
 | `make test` | `terraform test` for modules with a `tests/` folder (mock AWS) |
 | `make help` | all targets |
 
+Skills, loaded when needed: `new-terraform-module` and `fix-policy-violation` in [.claude/skills/](.claude/skills/).
+
 ## Forbidden
 
 | # | Never | Enforced by |

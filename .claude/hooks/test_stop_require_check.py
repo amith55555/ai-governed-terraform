@@ -35,10 +35,17 @@ class Decide(unittest.TestCase):
         self.assertIn("same error twice", message)
         self.assertEqual(state["attempts"], 0)
 
+    def test_same_failure_with_new_timestamps_stops_early(self):
+        """Found live: gitleaks prints the time, so the raw output was never identical."""
+        _, state, _ = hook.decide({}, False, "12:15PM INF scanned in 122ms\nFAIL: A")
+        allow, _, message = hook.decide(state, False, "12:16PM INF scanned in 126ms\nFAIL: A")
+        self.assertTrue(allow)
+        self.assertIn("same error twice", message)
+
     def test_attempt_cap_stops(self):
         state = {}
         for i in range(hook.MAX_ATTEMPTS - 1):
-            allow, state, _ = hook.decide(state, False, f"FAIL: {i}")
+            allow, state, _ = hook.decide(state, False, f"FAIL: rule {'ABCDEFG'[i]}")
             self.assertFalse(allow)
         allow, state, message = hook.decide(state, False, "FAIL: last")
         self.assertTrue(allow)
