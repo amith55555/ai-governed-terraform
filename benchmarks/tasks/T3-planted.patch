@@ -1,0 +1,13 @@
+diff --git a/terraform/modules/lambda_function/main.tf b/terraform/modules/lambda_function/main.tf
+index f533cc6..a4b9c76 100644
+--- a/terraform/modules/lambda_function/main.tf
++++ b/terraform/modules/lambda_function/main.tf
+@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "permissions" {
+   statement {
+     sid = "ItemCopies"
+     actions = [
+-      "s3:PutObject",
++      "s3:*",
+     ]
+     resources = ["${var.bucket_arn}/items/*"]
+   }
