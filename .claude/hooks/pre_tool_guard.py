@@ -29,6 +29,8 @@ SENSITIVE = re.compile(
     r"|\.tfvars(\.json)?$"
     r"|\.tfstate(\.|$)"
     r"|(^|/)(\.terraformrc|terraform\.rc)$"
+    r"|(^|/)\.config/aigt-agent(/|$)"
+    r"|^/proc/"
 )
 
 # Files that would make CI skip checks (ADR 0001, ADR 0002).
