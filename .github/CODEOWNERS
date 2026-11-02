@@ -12,6 +12,8 @@
 /terraform/bootstrap/       @amith55555
 /.claude/                   @amith55555
 /mcp-servers/               @amith55555
+/benchmarks/                @amith55555
+/docs/agent-log.md          @amith55555
 /.config/                   @amith55555
 /mise/                      @amith55555
 /Makefile                   @amith55555

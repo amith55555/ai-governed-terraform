@@ -15,8 +15,8 @@ import sys
 # Same list as .github/workflows/guard.yml, plus .git/ (git hooks and config).
 # Includes config files that tools load automatically (make, mise, gitleaks, conftest).
 PROTECTED = re.compile(
-    r"^(\.github|policies|scripts|risk|terraform/bootstrap|\.claude|mcp-servers|\.git|\.config|mise)(/|$)"
-    r"|^(Makefile|GNUmakefile|makefile|mise\.toml|\.mise\.toml|mise\.local\.toml|\.mise\.local\.toml"
+    r"^(benchmarks|\.github|policies|scripts|risk|terraform/bootstrap|\.claude|mcp-servers|\.git|\.config|mise)(/|$)"
+    r"|^(docs/agent-log\.md|Makefile|GNUmakefile|makefile|mise\.toml|\.mise\.toml|mise\.local\.toml|\.mise\.local\.toml"
     r"|\.tool-versions|\.terraform-version|\.python-version|\.pre-commit-config\.yaml|\.tflint\.hcl"
     r"|\.gitleaks\.toml|\.gitleaksignore|conftest\.toml|AGENTS\.md|CLAUDE\.md|\.mcp\.json)$"
 )
@@ -46,7 +46,7 @@ FIND_FORBIDDEN = {"-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint", "-
 
 MAKE_TARGETS = {
     "help", "check", "static", "scan", "secrets", "policy", "plan-policy",
-    "risk", "risk-test", "test", "agents-md", "hook-test",
+    "risk", "risk-test", "test", "agents-md", "hook-test", "usage-test",
 }
 MAKE_INFRA_TARGETS = {"up", "down", "plan"}
 

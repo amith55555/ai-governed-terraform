@@ -168,6 +168,8 @@ class FileTools(GuardTest):
     def test_writes_blocked(self):
         for path in [
             ".github/workflows/pr.yml",
+            "docs/agent-log.md",
+            "benchmarks/results/usage.csv",
             "policies/terraform/tags.rego",
             "Makefile",
             "GNUmakefile",
@@ -188,7 +190,7 @@ class FileTools(GuardTest):
                     self.assert_blocked(tool, file_path=path)
 
     def test_writes_allowed(self):
-        for path in ["terraform/modules/s3_bucket/main.tf", "app/handler.py", "docs/agent-log.md"]:
+        for path in ["terraform/modules/s3_bucket/main.tf", "app/handler.py", "docs/notes.md"]:
             with self.subTest(path=path):
                 self.assert_allowed("Write", file_path=path)
 
