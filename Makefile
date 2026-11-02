@@ -1,10 +1,13 @@
 .DEFAULT_GOAL := help
 DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
-.PHONY: help check static scan secrets agents-md hook-test policy plan-policy risk risk-test test plan up down
+.PHONY: help agent check static scan secrets agents-md hook-test policy plan-policy risk risk-test test plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
+
+agent: ## Start Claude Code as the agent (own limited token, no AWS session)
+	bash scripts/agent-session.sh
 
 check: policy risk-test hook-test static test secrets scan agents-md ## Run all local checks (same as CI)
 	@echo "check: all checks passed"

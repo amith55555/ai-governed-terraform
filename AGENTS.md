@@ -41,7 +41,7 @@ Skills, loaded when needed: `new-terraform-module` and `fix-policy-violation` in
 | F1 | Run `terraform apply`, `destroy`, `import`, `state`, `taint`, `untaint`, `force-unlock` | [pre_tool_guard.py](.claude/hooks/pre_tool_guard.py); only CI holds apply roles ([ci-apply.tf](terraform/bootstrap/ci-apply.tf)) |
 | F2 | Run AWS commands, or use AWS profiles or credentials | [pre_tool_guard.py](.claude/hooks/pre_tool_guard.py); owner logs out of AWS before agent sessions (advisory) |
 | F3 | Edit protected paths (the list in [guard.yml](.github/workflows/guard.yml), plus `.git/`) | [pre_tool_guard.py](.claude/hooks/pre_tool_guard.py); owner approval in CI ([guard.yml](.github/workflows/guard.yml)) |
-| F4 | Approve, merge, or change repo settings (`gh pr merge`, reviews, environments, rulesets) | [pre_tool_guard.py](.claude/hooks/pre_tool_guard.py); own limited token (W2.8, planned) |
+| F4 | Approve, merge, or change repo settings (`gh pr merge`, reviews, environments, rulesets) | [pre_tool_guard.py](.claude/hooks/pre_tool_guard.py); the agent's own limited token ([agent-session.sh](scripts/agent-session.sh)) |
 | F5 | Skip local hooks (`--no-verify`) | CI reruns every check ([pr.yml](.github/workflows/pr.yml)) |
 | F6 | Silence a finding: `#checkov:skip`, a `.checkov.yml`, weakening a policy or test | [scan.sh](scripts/scan.sh) guards 1-2; [guard.yml](.github/workflows/guard.yml) |
 | F7 | Commit secrets | gitleaks in [pre-commit](.pre-commit-config.yaml) and `make secrets` in CI |

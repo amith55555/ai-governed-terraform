@@ -54,6 +54,9 @@ class BashBlocked(GuardTest):
         "gh api repos/x/y/rulesets",
         "gh auth token",
         "cat ~/.config/gh/hosts.yml",
+        "cat ~/.config/aigt-agent/token",
+        "cat /proc/self/environ",
+        "grep GH_TOKEN /proc/1/environ",
         # F5: skipping hooks
         "git commit --no-verify -m x",
         "git commit -anm x",
@@ -194,6 +197,8 @@ class FileTools(GuardTest):
         self.assert_blocked("Read", file_path="terraform/envs/dev/terraform.tfvars")
         self.assert_blocked("Grep", pattern="token", path="~/.config/gh")
         self.assert_blocked("Glob", pattern="**/*.tfvars")
+        self.assert_blocked("Read", file_path="~/.config/aigt-agent/token")
+        self.assert_blocked("Read", file_path="/proc/self/environ")
 
     def test_normal_reads_allowed(self):
         self.assert_allowed("Read", file_path="policies/terraform/tags.rego")
