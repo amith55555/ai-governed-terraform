@@ -22,7 +22,11 @@ DynamoDB table. Conftest can only allow or block. We need a third answer:
 CI takes the highest level of dev and prod ("Risk gate"). On high, the
 "Risk approval" job runs in the `risk-approval` environment and waits for
 the repo owner. Both are required checks. Every push reruns them, so an
-approval never carries over to new commits. 13 unit tests cover the rules.
+approval never carries over to new commits. 17 unit tests cover the rules.
+
+`risk.json` also carries `counts` and `changes` (resource addresses and action
+words, never attribute values) for the `tf-check` MCP server. They play no part
+in setting the level.
 
 ## Not in the risk gate
 
