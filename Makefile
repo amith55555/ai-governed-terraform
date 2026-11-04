@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := help
 DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
-.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test plan up down
+MCP_DIR := mcp-servers/tf-check
+MCP_VENV := $(MCP_DIR)/.venv
+.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test mcp-install mcp-test plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -50,6 +52,13 @@ risk: ## Risk level of a plan JSON: make risk PLAN=plan.json OUT=risk.json
 
 risk-test: ## Unit tests for the risk gate
 	python3 -I -m unittest discover -s risk -v
+
+mcp-install: ## Install the tf-check MCP server's pinned packages into its own .venv
+	python3 -m venv $(MCP_VENV)
+	$(MCP_VENV)/bin/pip install --require-hashes -r $(MCP_DIR)/requirements.txt
+
+mcp-test: ## Unit and attack tests for the tf-check MCP server
+	python3 -I -m unittest discover -s $(MCP_DIR) -v
 
 test: policy ## terraform test for modules with a tests/ folder (mock AWS)
 	bash scripts/tf-test.sh
