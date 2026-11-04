@@ -3,12 +3,14 @@
 
 The level is decided only by the fixed rules below. No AI decides it.
 Usage: python3 risk/risk_gate.py PLAN_JSON > risk.json
-Output: JSON with "level" and "reasons". Reasons contain resource addresses only.
+Output: JSON with "level", "reasons", "counts" and "changes".
+Only resource addresses and fixed words, never attribute values.
 """
 import json
 import sys
 
 LEVELS = ["low", "medium", "high"]
+CHANGE_KINDS = ["add", "change", "replace", "destroy", "forget", "other"]
 
 # Resources that hold data: losing them loses data.
 STATEFUL_TYPES = {"aws_dynamodb_table", "aws_s3_bucket"}
@@ -22,8 +24,24 @@ def reason(level, address, rule, detail):
     return {"level": level, "address": address, "rule": rule, "detail": detail}
 
 
+def change_kind(actions):
+    if "delete" in actions and "create" in actions:
+        return "replace"
+    if "forget" in actions:
+        return "forget"
+    if "delete" in actions:
+        return "destroy"
+    if "create" in actions:
+        return "add"
+    if "update" in actions:
+        return "change"
+    return "other"
+
+
 def classify(plan):
     reasons = []
+    counts = dict.fromkeys(CHANGE_KINDS, 0)
+    changes = []
     for rc in plan.get("resource_changes", []):
         if rc.get("mode") != "managed":
             continue
@@ -33,6 +51,9 @@ def classify(plan):
 
         address = rc["address"]
         rtype = rc["type"]
+        kind = change_kind(actions)
+        counts[kind] += 1
+        changes.append({"address": address, "action": kind})
         before = rc["change"].get("before") or {}
         after = rc["change"].get("after") or {}
 
@@ -64,7 +85,7 @@ def classify(plan):
                                   "/".join(actions) + " of a permissions resource"))
 
     level = max((r["level"] for r in reasons), key=LEVELS.index, default="low")
-    return {"level": level, "reasons": reasons}
+    return {"level": level, "reasons": reasons, "counts": counts, "changes": changes}
 
 
 def main(argv):
