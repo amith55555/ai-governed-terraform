@@ -18,3 +18,14 @@ variable "alarm_email" {
   description = "Email address to receive alarm notifications"
   default     = null
 }
+
+variable "duration_threshold_ms" {
+  type        = number
+  description = "Lambda maximum duration (ms) over 5 minutes above which the duration alarm fires; default 8000 is 80% of the 10-second timeout"
+  default     = 8000
+
+  validation {
+    condition     = var.duration_threshold_ms > 0 && var.duration_threshold_ms <= 900000
+    error_message = "duration_threshold_ms must be greater than 0 and at most 900000 (the Lambda maximum timeout)."
+  }
+}
