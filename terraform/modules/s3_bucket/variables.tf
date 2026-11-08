@@ -12,3 +12,13 @@ variable "force_destroy" {
   description = "Delete all objects when destroying the bucket. Use true only in non-production environments."
   default     = false
 }
+
+variable "expiration_days" {
+  type        = number
+  description = "Expire current object versions this many days after creation. Null (the default) means objects never expire."
+  default     = null
+  validation {
+    condition     = var.expiration_days == null || try(var.expiration_days >= 1 && floor(var.expiration_days) == var.expiration_days, false)
+    error_message = "expiration_days must be null or a whole number of at least 1."
+  }
+}

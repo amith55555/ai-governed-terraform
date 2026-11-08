@@ -18,3 +18,8 @@ output "function_name" {
   description = "Name of the Lambda function"
   value       = module.lambda.function_name
 }
+
+output "exports_bucket_name" {
+  description = "Name of the exports S3 bucket"
+  value       = module.exports_bucket.bucket_name
+}
