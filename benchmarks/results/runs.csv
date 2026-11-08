@@ -1,1 +1,1 @@
-run_id,task,config,run,session_id,date,success,first_pass_ci,ci_pushes,stop_hook_blocks,human_interventions,notes
+run_id,task,config,run,session_id,pr,date,success,first_pass_ci,ci_pushes,stop_hook_blocks,human_interventions,notes

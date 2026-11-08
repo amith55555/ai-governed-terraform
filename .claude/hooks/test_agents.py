@@ -1,8 +1,15 @@
-"""Tests for the two sub-agents in .claude/agents/."""
+"""Tests for the two sub-agents in .claude/agents/.
+
+The reviewer must be truly read-only (its tool list, not its prompt), every tool either
+agent can use must still reach the pre-tool guard, and the implementer may only finish
+when `make check` passes (SubagentStop hook). See docs/adr/0008-sub-agents.md.
+"""
 import json
 import os
 import re
 import unittest
+
+from pre_tool_guard import MCP_TOOLS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CLAUDE = os.path.join(HERE, "..")
@@ -97,6 +104,14 @@ class Guarded(unittest.TestCase):
     def test_no_other_agents(self):
         files = sorted(os.listdir(os.path.join(CLAUDE, "agents")))
         self.assertEqual(files, ["implementer.md", "reviewer.md"])
+
+
+class ToolNames(unittest.TestCase):
+    def test_wildcard_means_exactly_the_guarded_tools(self):
+        """`mcp__tf-check__*` hands both agents every tf-check tool. If the server gains a tool, the
+        guard must allow it first (test_registration.py), and then this test fails until the
+        agents' deny lists are reviewed. Found by the reviewer sub-agent in its first review."""
+        self.assertEqual(TF_CHECK, set(MCP_TOOLS))
 
 
 class SubagentStop(unittest.TestCase):
