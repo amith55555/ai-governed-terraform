@@ -37,6 +37,20 @@ Only CI changes AWS. You propose changes as a pull request; CI plans, checks and
 Server details: [mcp-servers/tf-check/README.md](mcp-servers/tf-check/README.md).
 Skills, loaded when needed: `new-terraform-module` and `fix-policy-violation` in [.claude/skills/](.claude/skills/).
 
+## Sub-agents
+
+Two sub-agents in [.claude/agents/](.claude/agents/). Each starts with a fresh context.
+
+| Sub-agent | Use it for | It can |
+|---|---|---|
+| `implementer` | making the code change | read, edit, call `check`; it can only finish when `make check` passes |
+| `reviewer` | an independent review after you push | read, call `plan_summary`; it cannot change anything |
+
+1. Give `implementer` the task and the files to change.
+2. You commit, push and open the PR.
+3. Give `reviewer` only the task, the PR number and the changed files (`git diff --name-only origin/main`), never your reasoning.
+4. Fix its findings through `implementer`. Its verdict is advice; CI and the owner decide.
+
 ## Forbidden
 
 | # | Never | Enforced by |
