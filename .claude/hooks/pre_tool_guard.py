@@ -4,7 +4,8 @@
 Reads one tool call as JSON on stdin and decides with fixed rules:
 exit 0 = allow, exit 2 = block (the reason on stderr is shown to the agent).
 Any unexpected error also blocks (fail closed).
-Rules: AGENTS.md F1-F7. Design and known limits: docs/adr/0005-agent-hooks.md.
+Rules: AGENTS.md F1-F7. Design and known limits: docs/adr/0005-agent-hooks.md,
+MCP tools: docs/adr/0007-tf-check-mcp-server.md.
 """
 import json
 import os
@@ -47,8 +48,17 @@ FIND_FORBIDDEN = {"-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint", "-
 MAKE_TARGETS = {
     "help", "check", "static", "scan", "secrets", "policy", "plan-policy",
     "risk", "risk-test", "test", "agents-md", "hook-test", "usage-test",
+    "fmt", "validate", "lint", "mcp-test",
 }
 MAKE_INFRA_TARGETS = {"up", "down", "plan"}
+
+# MCP tools are an allowlist too: tool name -> the only argument names it may get.
+# The server checks its arguments again; this is the layer that does not trust the server.
+MCP_TOOLS = {
+    "mcp__tf-check__check": set(),
+    "mcp__tf-check__plan_summary": {"pr", "env"},
+}
+MCP_ENVS = {"dev", "prod", "all"}
 
 TERRAFORM_ALLOWED = {"fmt", "version"}
 TERRAFORM_STATE_CHANGING = {"apply", "destroy", "import", "state", "taint", "untaint", "force-unlock"}
@@ -272,15 +282,42 @@ def check_terraform(args):
         raise Blocked(f"'terraform {sub}' is not allowed: use make static / make test")
 
 
+# ---------- MCP tools ----------
+
+def check_mcp(tool, data):
+    if tool not in MCP_TOOLS:
+        raise Blocked(f"MCP tool '{tool}' is not on the allowed list (only the tf-check tools)")
+    if not isinstance(data, dict):
+        raise Blocked("MCP tool input must be a JSON object")
+    extra = sorted(set(data) - MCP_TOOLS[tool])
+    if extra:
+        raise Blocked(f"unexpected arguments for {tool}: {', '.join(extra)}")
+    if tool == "mcp__tf-check__plan_summary":
+        pr = data.get("pr")
+        if isinstance(pr, str) and re.fullmatch(r"[1-9][0-9]{0,5}", pr):
+            pr = int(pr)
+        if type(pr) is not int or not 0 < pr < 1_000_000:
+            raise Blocked("plan_summary needs pr: a pull request number")
+        env = data.get("env", "all")
+        if not isinstance(env, str) or env not in MCP_ENVS:
+            raise Blocked("plan_summary env must be dev, prod or all")
+
+
 # ---------- entry points ----------
 
 def check(payload, root):
     """Return None to allow, or the reason to block."""
     tool = payload.get("tool_name", "")
-    data = payload.get("tool_input") or {}
+    data = payload.get("tool_input")
+    if data is None:
+        data = {}
     cwd = payload.get("cwd") or root
     try:
-        if tool == "Bash":
+        if tool.startswith("mcp__"):
+            check_mcp(tool, data)
+        elif not isinstance(data, dict):
+            raise Blocked("tool input must be a JSON object")
+        elif tool == "Bash":
             check_bash(data.get("command", ""), cwd, root)
         elif tool in WRITE_TOOLS:
             path = data.get("file_path") or data.get("notebook_path")

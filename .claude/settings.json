@@ -7,7 +7,19 @@
           {
             "type": "command",
             "command": "python3 -I \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_guard.py\" || exit 2",
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -I \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_guard.py\" || exit 2",
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       }
