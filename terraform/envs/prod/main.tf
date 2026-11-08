@@ -38,9 +38,10 @@ module "api" {
 }
 
 module "alarms" {
-  source        = "../../modules/alarms"
-  name_prefix   = local.name_prefix
-  function_name = module.lambda.function_name
-  api_id        = module.api.api_id
-  alarm_email   = var.alarm_email
+  source                       = "../../modules/alarms"
+  name_prefix                  = local.name_prefix
+  function_name                = module.lambda.function_name
+  api_id                       = module.api.api_id
+  alarm_email                  = var.alarm_email
+  lambda_duration_threshold_ms = 8000
 }
