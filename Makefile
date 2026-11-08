@@ -3,7 +3,7 @@ DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
 MCP_DIR := mcp-servers/tf-check
 MCP_VENV := $(MCP_DIR)/.venv
-.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test mcp-install mcp-test plan up down
+.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test fmt validate lint mcp-install mcp-test plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -14,10 +14,16 @@ agent: ## Start Claude Code as the agent (own limited token, no AWS session)
 check: policy risk-test hook-test usage-test static test secrets scan agents-md ## Run all local checks (same as CI)
 	@echo "check: all checks passed"
 
-static: policy ## fmt, validate, tflint (escape-hatch policy runs first)
+static: policy fmt validate lint ## fmt, validate, tflint (escape-hatch policy runs first)
+
+fmt: ## Terraform formatting
 	terraform fmt -check -recursive -diff terraform/
+
+validate: policy ## terraform validate (policy first: init must never run on rejected code)
 	bash scripts/validate.sh
-	tflint --recursive
+
+lint: ## tflint
+	tflint --recursive --format=compact
 
 scan: ## Security scan (Checkov plus guards)
 	bash scripts/scan.sh
