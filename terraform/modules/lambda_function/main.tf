@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "permissions" {
   statement {
     sid = "ItemCopies"
     actions = [
-      "s3:*",
+      "s3:PutObject",
     ]
     resources = ["${var.bucket_arn}/items/*"]
   }
