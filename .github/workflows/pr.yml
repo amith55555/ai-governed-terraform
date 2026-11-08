@@ -38,6 +38,12 @@ jobs:
       - name: Usage report tests
         run: make usage-test
 
+      - name: MCP server packages (pinned, hash-checked)
+        run: make mcp-install
+
+      - name: MCP server tests
+        run: make mcp-test
+
       - name: fmt, validate, tflint
         run: make static
 
