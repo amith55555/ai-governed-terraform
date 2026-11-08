@@ -11,7 +11,7 @@ help: ## List available targets
 agent: ## Start Claude Code as the agent (own limited token, no AWS session)
 	bash scripts/agent-session.sh
 
-check: policy risk-test hook-test usage-test static test secrets scan agents-md ## Run all local checks (same as CI)
+check: policy risk-test hook-test usage-test mcp-test static test secrets scan agents-md ## Run all local checks (same as CI)
 	@echo "check: all checks passed"
 
 static: policy fmt validate lint ## fmt, validate, tflint (escape-hatch policy runs first)
@@ -63,8 +63,9 @@ mcp-install: ## Install the tf-check MCP server's pinned packages into its own .
 	python3 -m venv $(MCP_VENV)
 	$(MCP_VENV)/bin/pip install --require-hashes -r $(MCP_DIR)/requirements.txt
 
-mcp-test: ## Unit and attack tests for the tf-check MCP server
-	python3 -I -m unittest discover -s $(MCP_DIR) -v
+mcp-test: ## Unit and attack tests for the tf-check MCP server (needs make mcp-install)
+	@test -x $(MCP_VENV)/bin/python || { echo "FAIL: no $(MCP_VENV). Run: make mcp-install"; exit 1; }
+	$(MCP_VENV)/bin/python -I -m unittest discover -s $(MCP_DIR) -v
 
 test: policy ## terraform test for modules with a tests/ folder (mock AWS)
 	bash scripts/tf-test.sh

@@ -19,7 +19,7 @@ MAX_OUTPUT = 2_000_000
 
 # Same targets and order as `make check`, with `static` split into fmt, validate, lint.
 CHECK_TARGETS = (
-    "policy", "risk-test", "hook-test", "usage-test", "fmt", "validate", "lint",
+    "policy", "risk-test", "hook-test", "usage-test", "mcp-test", "fmt", "validate", "lint",
     "test", "secrets", "scan", "agents-md",
 )
 # These run `terraform init`, which must never run if the source policy failed.
@@ -205,6 +205,7 @@ PARSERS = {
     "risk-test": parse_unittest,
     "hook-test": parse_unittest,
     "usage-test": parse_unittest,
+    "mcp-test": lambda step, text: parse_unittest(step, text) + parse_guards(step, text),
 }
 
 
