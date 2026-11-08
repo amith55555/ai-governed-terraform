@@ -1,0 +1,2 @@
+model,input,output,cache_write_5m,cache_write_1h,cache_read,unit,checked,source
+claude-opus-5-5,4.00,20.00,5.00,8.00,0.20,USD per million tokens,2026-11-08,https://platform.claude.com/docs/en/about-claude/pricing

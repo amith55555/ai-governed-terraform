@@ -3,7 +3,7 @@ DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
 MCP_DIR := mcp-servers/tf-check
 MCP_VENV := $(MCP_DIR)/.venv
-.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test fmt validate lint mcp-install mcp-test plan up down
+.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test fmt validate lint mcp-install mcp-test bench-setup bench-report plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -37,8 +37,8 @@ agents-md: ## AGENTS.md and skills: length, front matter, links to real files
 hook-test: ## Attack tests for the agent hooks
 	python3 -I -m unittest discover -s .claude/hooks -v
 
-usage: ## Token usage per agent session -> benchmarks/results/usage.csv
-	python3 -I benchmarks/usage.py
+usage: ## Token usage per agent session -> benchmarks/results/usage.csv (REPO=folder Claude Code ran in)
+	python3 -I benchmarks/usage.py --repo "$(or $(REPO),$(CURDIR))"
 
 usage-test: ## Unit tests for the usage report
 	python3 -I -m unittest discover -s benchmarks -v
@@ -66,6 +66,12 @@ mcp-install: ## Install the tf-check MCP server's pinned packages into its own .
 mcp-test: ## Unit and attack tests for the tf-check MCP server (needs make mcp-install)
 	@test -x $(MCP_VENV)/bin/python || { echo "FAIL: no $(MCP_VENV). Run: make mcp-install"; exit 1; }
 	$(MCP_VENV)/bin/python -I -m unittest discover -s $(MCP_DIR) -v
+
+bench-setup: ## Clean copy for one benchmark run: make bench-setup CONFIG=harness|baseline
+	bash scripts/bench-setup.sh "$(CONFIG)"
+
+bench-report: ## Benchmark tables from runs.csv, usage.csv, prices.csv -> benchmarks/results/report.md
+	python3 -I benchmarks/report.py
 
 test: policy ## terraform test for modules with a tests/ folder (mock AWS)
 	bash scripts/tf-test.sh

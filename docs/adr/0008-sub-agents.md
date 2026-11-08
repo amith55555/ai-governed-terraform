@@ -1,6 +1,6 @@
 # ADR 0008: Two sub-agents, implementer and read-only reviewer
 
-- Status: Accepted
+- Status: Accepted (live results added)
 - Date: 2026-11-08
 - Tool: Claude Code 2.1.316
 
@@ -38,12 +38,19 @@ Two sub-agents in `.claude/agents/`, both with `model: inherit`:
 
 - **The reviewer's verdict is advice.** It cannot approve or block a PR;
   CI and the owner do.
-- **Not yet tested live:** that the guard and the SubagentStop hook fire
-  inside a sub-agent, and whether the main Stop hook also fires when a
-  sub-agent finishes. Tested in W3.3 step 3.
+- **Tested live (W3.3, agent log 12-14):** the guard blocks inside both
+  sub-agents, and the SubagentStop hook stops the implementer from finishing
+  with a failing `make check`, including the "same error twice" limit. The
+  first tests proved nothing, because the agents refused by their own
+  instructions; safety nets must be tested with traps the agent does not
+  recognise.
+- **Sub-agents run in the background.** The main agent sees only a
+  sub-agent's final reply, not its hook messages. The session logs keep them.
 - **The stop hook's attempt counter** is kept per session, so the main agent
   and the implementer may share it.
 - **Tool lists use `mcp__tf-check__*` and then deny one tool**, because the
-  docs only confirm the whole-server form.
+  docs only confirm the whole-server form. A new tf-check tool would reach
+  both sub-agents; a test (`test_agents.py`) fails until the guard and the
+  deny lists are reviewed. Found by the reviewer in its first review.
 - **Cost:** every sub-agent call re-reads files the main agent may already
   have read. The benchmark reports whether this paid off.
