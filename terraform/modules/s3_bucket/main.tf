@@ -75,6 +75,13 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
     abort_incomplete_multipart_upload {
       days_after_initiation = 7
     }
+    dynamic "expiration" {
+      for_each = var.expiration_days == null ? [] : [var.expiration_days]
+      content {
+        days = expiration.value
+      }
+    }
   }
+
   depends_on = [aws_s3_bucket_versioning.this]
 }
