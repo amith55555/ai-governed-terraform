@@ -59,6 +59,16 @@ run "rejects_invalid_expiration_days" {
   expect_failures = [var.expiration_days]
 }
 
+run "rejects_non_integer_expiration_days" {
+  command = plan
+
+  variables {
+    expiration_days = 1.5
+  }
+
+  expect_failures = [var.expiration_days]
+}
+
 run "rejects_invalid_name" {
   command = plan
 

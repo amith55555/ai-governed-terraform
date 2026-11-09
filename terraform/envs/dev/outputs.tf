@@ -15,7 +15,7 @@ output "bucket_name" {
 }
 
 output "exports_bucket_name" {
-  description = "Name of the exports S3 bucket (objects expire after 90 days)"
+  description = "Name of the exports S3 bucket (objects expire automatically)"
   value       = module.exports_bucket.bucket_name
 }
 
