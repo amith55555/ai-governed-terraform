@@ -16,6 +16,13 @@ module "bucket" {
   force_destroy = true
 }
 
+module "exports_bucket" {
+  source          = "../../modules/s3_bucket"
+  name            = "${local.name_prefix}-exports-${local.bucket_suffix}"
+  expiration_days = 90
+  force_destroy   = true
+}
+
 module "lambda" {
   source               = "../../modules/lambda_function"
   name                 = "${local.name_prefix}-api"
