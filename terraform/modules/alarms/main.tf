@@ -63,3 +63,21 @@ resource "aws_cloudwatch_metric_alarm" "api_5xx" {
   alarm_actions       = [aws_sns_topic.alarms.arn]
   ok_actions          = [aws_sns_topic.alarms.arn]
 }
+
+resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
+  alarm_name  = "${var.name_prefix}-lambda-duration"
+  namespace   = "AWS/Lambda"
+  metric_name = "Duration"
+  dimensions = {
+    FunctionName = var.function_name
+  }
+  alarm_description   = "Alarm when the Lambda function's maximum duration is above 80% of its timeout"
+  statistic           = "Maximum"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  period              = 300
+  threshold           = var.function_timeout_seconds * 1000 * 0.8
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  ok_actions          = [aws_sns_topic.alarms.arn]
+}

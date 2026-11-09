@@ -18,3 +18,13 @@ variable "alarm_email" {
   description = "Email address to receive alarm notifications"
   default     = null
 }
+
+variable "function_timeout_seconds" {
+  type        = number
+  description = "Timeout of the Lambda function in seconds; the duration alarm fires above 80% of it"
+
+  validation {
+    condition     = var.function_timeout_seconds >= 1 && var.function_timeout_seconds <= 900
+    error_message = "function_timeout_seconds must be between 1 and 900 (the Lambda limit)."
+  }
+}

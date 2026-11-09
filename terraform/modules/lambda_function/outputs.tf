@@ -12,3 +12,8 @@ output "invoke_arn" {
   description = "ARN of the Lambda function invocation"
   value       = aws_lambda_function.this.invoke_arn
 }
+
+output "timeout" {
+  description = "Timeout of the Lambda function, in seconds"
+  value       = aws_lambda_function.this.timeout
+}

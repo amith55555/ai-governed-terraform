@@ -43,4 +43,6 @@ module "alarms" {
   function_name = module.lambda.function_name
   api_id        = module.api.api_id
   alarm_email   = var.alarm_email
+
+  function_timeout_seconds = module.lambda.timeout
 }
