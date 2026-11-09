@@ -76,5 +76,21 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
       days_after_initiation = 7
     }
   }
+
+  dynamic "rule" {
+    for_each = var.expiration_days == null ? [] : [var.expiration_days]
+    content {
+      filter {}
+      id     = "ExpireObjects"
+      status = "Enabled"
+      expiration {
+        days = rule.value
+      }
+      abort_incomplete_multipart_upload {
+        days_after_initiation = 7
+      }
+    }
+  }
+
   depends_on = [aws_s3_bucket_versioning.this]
 }
