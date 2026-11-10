@@ -52,6 +52,16 @@ data "aws_iam_policy_document" "permissions" {
     ]
     resources = ["${var.bucket_arn}/items/*"]
   }
+
+  # The handler signs GET URLs with this role, so the role itself must be
+  # allowed to read the object the URL points at.
+  statement {
+    sid = "ItemFileReads"
+    actions = [
+      "s3:GetObject",
+    ]
+    resources = ["${var.bucket_arn}/items/*"]
+  }
 }
 
 resource "aws_iam_role_policy" "this" {

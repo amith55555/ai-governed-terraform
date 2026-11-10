@@ -12,7 +12,7 @@ resource "aws_apigatewayv2_integration" "lambda" {
 }
 
 locals {
-  routes = toset(["GET /health", "POST /items", "GET /items", "GET /items/{id}"])
+  routes = toset(["GET /health", "POST /items", "GET /items", "GET /items/{id}", "GET /items/{id}/file"])
 }
 
 resource "aws_apigatewayv2_route" "this" {

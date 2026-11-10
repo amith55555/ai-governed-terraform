@@ -5,6 +5,7 @@ Routes:
   POST /items        -> create an item from {"name": "..."}
   GET  /items        -> list up to 50 items
   GET  /items/{id}   -> get one item
+  GET  /items/{id}/file -> short-lived pre-signed URL for the item's S3 copy
 """
 
 import base64
@@ -15,6 +16,7 @@ import uuid
 from datetime import datetime, timezone
 
 import boto3
+from botocore.config import Config
 
 logger = logging.getLogger()
 logger.setLevel("INFO")
@@ -22,12 +24,18 @@ logger.setLevel("INFO")
 # Created once when Lambda starts a container, then reused for every request.
 # TABLE_NAME and BUCKET_NAME are set by Terraform (lambda_function module).
 TABLE = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-S3 = boto3.client("s3")
+# Pre-signed URLs need SigV4 and the regional endpoint (Lambda sets AWS_REGION).
+S3 = boto3.client(
+    "s3",
+    region_name=os.environ.get("AWS_REGION"),
+    config=Config(signature_version="s3v4"),
+)
 BUCKET = os.environ["BUCKET_NAME"]
 
 MAX_NAME_LENGTH = 100
 MAX_ID_LENGTH = 64
 LIST_LIMIT = 50
+FILE_URL_EXPIRES_SECONDS = 300
 
 
 def response(status, body):
@@ -96,6 +104,22 @@ def get_item(event):
     return response(200, item)
 
 
+def get_item_file(event):
+    """Return a short-lived pre-signed GET URL for the item's copy in S3."""
+    item_id = (event.get("pathParameters") or {}).get("id")
+    if not item_id or len(item_id) > MAX_ID_LENGTH:
+        return response(404, {"error": "item not found"})
+    item = TABLE.get_item(Key={"id": item_id}).get("Item")
+    if item is None:
+        return response(404, {"error": "item not found"})
+    url = S3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": BUCKET, "Key": f"items/{item_id}.json"},
+        ExpiresIn=FILE_URL_EXPIRES_SECONDS,
+    )
+    return response(200, {"url": url, "expires_in": FILE_URL_EXPIRES_SECONDS})
+
+
 def list_items(event):
     result = TABLE.scan(Limit=LIST_LIMIT)
     return response(200, {"items": result.get("Items", [])})
@@ -106,6 +130,7 @@ ROUTES = {
     "POST /items": create_item,
     "GET /items": list_items,
     "GET /items/{id}": get_item,
+    "GET /items/{id}/file": get_item_file,
 }
 
 
