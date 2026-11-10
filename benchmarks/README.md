@@ -78,6 +78,11 @@ How each task was judged: T1 and T2 from the PR diff and the CI plan (read with
 - `mutation_t4.sh` also counts a mutation as caught if Terraform cannot start. The
   unmutated module must pass first, and none of the 5 mutations breaks the file format.
 - Stop-hook blocks are counted as distinct "attempt N" messages in the session's logs.
+- T1-h2 (PR #52) derives the alarm threshold from the Lambda timeout. That it equals `8000`
+  was judged from the agent's own test, which asserts `8000`, not checked by the owner in
+  the plan output. The run counts as a failure anyway (criterion 4), so no result changes.
+- Human interventions were counted by hand. Claude Code stores a sub-agent's final report
+  as a "user" message in the session log, so an automatic count must skip those.
 - Since PR #61 (2026-11-10), `main` has a newer `guard.yml` than the tag. GitHub refuses
   an agent push of a branch made from the tag (most likely because the agent token has
   no permission to change workflow files), so a new run from the tag would have to rebase

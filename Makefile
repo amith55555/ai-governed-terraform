@@ -3,7 +3,7 @@ DEV_DIR := terraform/envs/dev
 RANGE ?= origin/main..HEAD
 MCP_DIR := mcp-servers/tf-check
 MCP_VENV := $(MCP_DIR)/.venv
-.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test fmt validate lint mcp-install mcp-test bench-setup bench-report plan up down
+.PHONY: help agent check static scan secrets agents-md hook-test usage usage-test policy plan-policy risk risk-test test fmt validate lint mcp-install mcp-test bench-setup bench-report readme plan up down
 
 help: ## List available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -72,6 +72,9 @@ bench-setup: ## Clean copy for one benchmark run: make bench-setup CONFIG=harnes
 
 bench-report: ## Benchmark tables from runs.csv, usage.csv, prices.csv -> benchmarks/results/report.md
 	python3 -I benchmarks/report.py
+
+readme: ## Results tables in README.md from the benchmark and eval data (checked by usage-test)
+	python3 -I benchmarks/readme.py
 
 test: policy ## terraform test for modules with a tests/ folder (mock AWS)
 	bash scripts/tf-test.sh
