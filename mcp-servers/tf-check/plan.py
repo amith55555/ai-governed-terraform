@@ -18,8 +18,17 @@ MAX_PR = 1_000_000
 
 # A Terraform address, including for_each keys. No spaces: a sentence hidden in a key is rejected.
 ADDRESS = re.compile(r'^[A-Za-z0-9_.\-\[\]"]{1,200}$')
+# One exception: an API Gateway route key, exactly 'METHOD /path' (one space, no spaces in the path).
+ROUTE_KEY = re.compile(r'\["(?:GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|ANY) /[A-Za-z0-9_.\-/{}+]{0,100}"\]')
 SHA = re.compile(r"^[0-9a-f]{40}$")
 POLICY_LINE = re.compile(r"^Plan \((dev|prod)\)\t[^\t]*\t\S+\s+FAIL - \S+ - (\S+) - (.+)$")
+
+
+def safe_address(address):
+    """The address if it has the expected shape, else a placeholder (it may carry injected text)."""
+    if isinstance(address, str) and len(address) <= 200 and ADDRESS.match(ROUTE_KEY.sub('["route"]', address)):
+        return address
+    return "<invalid address>"
 
 
 class Unusable(Exception):
@@ -97,15 +106,14 @@ def check_risk(data):
         if not isinstance(item, dict) or item.get("action") not in CHANGE_KINDS:
             raise Unusable("risk report has an invalid change")
         address = item.get("address")
-        changes.append({"address": address if isinstance(address, str) and ADDRESS.match(address)
-                        else "<invalid address>", "action": item["action"]})
+        changes.append({"address": safe_address(address), "action": item["action"]})
     for item in data.get("reasons", []) if isinstance(data.get("reasons"), list) else []:
         if not isinstance(item, dict) or item.get("level") not in LEVELS:
             raise Unusable("risk report has an invalid reason")
         address = item.get("address")
         reasons.append({
             "level": item["level"],
-            "address": address if isinstance(address, str) and ADDRESS.match(address) else "<invalid address>",
+            "address": safe_address(address),
             "rule": str(item.get("rule", "")),
             "detail": str(item.get("detail", "")),
         })

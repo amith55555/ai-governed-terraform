@@ -1,7 +1,7 @@
 # ADR 0007: tf-check MCP server
 
-- Status: Accepted
-- Date: 2026-11-08
+- Status: Accepted (updated in W3.6: live results, route keys)
+- Date: 2026-11-08, updated 2026-11-10
 - SDK: `mcp` 2.3.0 (Python, `MCPServer`), pinned with hashes
 
 ## Context
@@ -35,7 +35,8 @@ Security layers, each tested:
    environment variables (no AWS, `TF_VAR_*`, `MAKEFLAGS`); the source
    policy runs before any `terraform init`; a report is accepted only in the
    exact shape `risk_gate.py` writes, with counts matching changes;
-   addresses with spaces are replaced (no sentences in for_each keys).
+   addresses with spaces are replaced (no sentences in for_each keys),
+   except API route keys of the exact form `METHOD /path` (W3.6).
 2. **Output:** schema `tf-check/v1`, at most 20 findings, 30 changes and
    8,000 bytes, an `omitted` counter, redaction of account IDs, emails, API
    URLs and tokens, no secret values from gitleaks. A failure, a timeout or
@@ -45,8 +46,13 @@ Security layers, each tested:
    `pre_tool_guard.py`, which allows only the two tools and checks their
    arguments again (ADR 0005).
 
-Tests: `make mcp-test` (92 tests, part of `make check` and CI, including a
-real stdio start) and `make hook-test` (`test_mcp_guard.py`).
+Tests: `make mcp-test` (part of `make check` and CI, including a real stdio
+start) and `make hook-test` (`test_mcp_guard.py`).
+
+Tested live (W3.2-W3.5): malformed calls from a real agent were blocked by the
+guard (agent-log entry 10); the agents used `check` and `plan_summary` in the
+benchmark and eval runs; `plan_summary` found an unconfirmed prod alarm
+subscription (entry 9).
 
 ## Known limits
 
@@ -63,5 +69,6 @@ real stdio start) and `make hook-test` (`test_mcp_guard.py`).
   error can hide the same error in prod.
 - **The server runs as the owner's Linux user**, like the agent. A separate
   user or container would isolate it (same limit as ADR 0006).
-- **Not yet tested live** with Claude Code: W3.2 registers the server in
-  `.mcp.json` and runs the agent against it.
+- **Route keys were shown as `<invalid address>`** until W3.6 (eval E2, entry
+  21). Now the exact `METHOD /path` shape is allowed; every other key with
+  spaces is still replaced, with attack tests.

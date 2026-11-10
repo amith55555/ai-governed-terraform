@@ -1,7 +1,7 @@
 # ADR 0004: Protected paths need the owner's approval
 
-- Status: Accepted
-- Date: 2026-11-01
+- Status: Accepted (list updated in W3.6)
+- Date: 2026-11-01, updated 2026-11-10
 
 ## Context
 
@@ -24,9 +24,20 @@ agent also uses.
   files than the PR has, the PR is treated as protected.
 - Both jobs are required checks. Every push needs a new approval.
 
-Protected: `.github/`, `policies/`, `scripts/`, `risk/`,
-`terraform/bootstrap/`, `.claude/`, `mcp-servers/`, `Makefile`, `mise.toml`,
-`.pre-commit-config.yaml`, `.tflint.hcl`, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`.
+Protected (W3.6; the source of truth is `PROTECTED` in `guard.yml`):
+
+- Folders: `.github/`, `policies/`, `scripts/`, `risk/`, `terraform/bootstrap/`,
+  `.claude/`, `mcp-servers/`, `benchmarks/`, `evals/`, `.config/`, `mise/`.
+- Files: `docs/agent-log.md`, `Makefile`, `GNUmakefile`, `makefile`, the mise files
+  (`mise.toml`, `.mise.toml`, `mise.local.toml`, `.mise.local.toml`),
+  `.tool-versions`, `.terraform-version`, `.python-version`,
+  `.pre-commit-config.yaml`, `.tflint.hcl`, `.gitleaks.toml`, `.gitleaksignore`,
+  `conftest.toml`, `AGENTS.md`, `CLAUDE.md`, `.mcp.json`.
+- The local guard also protects `.git/` (ADR 0005).
+
+`benchmarks/` and `evals/` were added in week 3 so the agent cannot change the
+tests it is measured with. `docs/agent-log.md` is protected so the agent cannot
+edit the record of its own mistakes.
 
 ## Known weak spot
 
@@ -43,5 +54,5 @@ environments, merge PRs and edit rulesets. Before the first agent PR:
 - Changes to guardrails cost one extra click for the owner.
 - The first PR that adds `guard.yml` cannot be protected by it: the
   workflow only exists after it is merged.
-- The path list exists twice (CODEOWNERS and `guard.yml`) and must be kept
-  in sync by hand.
+- The path list exists three times (`guard.yml`, CODEOWNERS and the local
+  guard). `.claude/hooks/test_protected_lists.py` fails if they disagree.

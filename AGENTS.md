@@ -24,7 +24,8 @@ Only CI changes AWS. You propose changes as a pull request; CI plans, checks and
 2. Call the `check` tool until its `status` is `pass`. It runs exactly what `make check` runs and returns short findings.
 3. Open the PR with: what changed, why, and any risk (deletes, replaces, IAM changes).
 4. After each push, call `plan_summary` with the PR number: plan counts, changes, risk level and plan-policy failures from CI. If it says `pending`, wait and call again. You cannot plan locally.
-5. If a hook blocks you, read the reason and change approach; never look for a way around it. Allowed: the tf-check tools, `make` targets, `git`, `gh pr create/view/checks`, `terraform fmt`, read-only tools.
+5. If a hook blocks you, read the reason and change approach; never look for a way around it. Allowed: the tf-check tools, `make` targets, `git`, `gh pr create/view/checks`, `terraform fmt`, read-only tools, and writing files in your own Claude Code scratchpad (for a PR body or commit message).
+6. A check waiting for approval (`Risk approval`, `Protected paths approval`) is the owner's step. Say so in your report and stop; do not wait for it.
 
 | Tool or command | What it gives you |
 |---|---|

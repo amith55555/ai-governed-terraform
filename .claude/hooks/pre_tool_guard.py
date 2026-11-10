@@ -86,6 +86,13 @@ READ_TOOLS = {"Read", "Grep", "Glob"}
 
 PUNCTUATION = "();<>|&\n"
 
+# Claude Code's own scratchpad for this session: /tmp/claude-<uid>/<repo path, non-alphanumerics
+# as "-">/<session id>/scratchpad/. Writes there are allowed (PR bodies, commit messages);
+# nothing there can be run, because interpreters and scripts stay blocked. ADR 0005.
+SCRATCH_BASE = "/tmp"
+SESSION_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+scratchpad = None  # set by check() for each tool call
+
 
 class Blocked(Exception):
     pass
@@ -109,13 +116,24 @@ def check_read(path, cwd):
         raise Blocked(f"'{path}' holds credentials or private values")
 
 
+def scratchpad_for(session_id, root):
+    """The real path of this session's scratchpad, or None if the session id is not a plain UUID."""
+    if not isinstance(session_id, str) or not SESSION_ID.match(session_id):
+        return None
+    project = re.sub(r"[^A-Za-z0-9]", "-", root)
+    return os.path.realpath(os.path.join(SCRATCH_BASE, f"claude-{os.getuid()}", project, session_id, "scratchpad"))
+
+
 def check_write(path, cwd, root):
     if path == "/dev/null":
         return
     if re.search(r"[*?\[\]{}]", path):
         raise Blocked(f"wildcards are not allowed in a path that is written or deleted: '{path}'")
     check_read(path, cwd)
-    rel = repo_relative(resolve(path, cwd), root)
+    real = resolve(path, cwd)
+    if scratchpad and real.startswith(scratchpad + "/"):
+        return  # inside this session's own scratchpad (realpath: no .. or symlink escapes)
+    rel = repo_relative(real, root)
     if rel is None:
         raise Blocked(f"'{path}' is outside the repo")
     if rel == ".":
@@ -312,6 +330,8 @@ def check(payload, root):
     if data is None:
         data = {}
     cwd = payload.get("cwd") or root
+    global scratchpad
+    scratchpad = scratchpad_for(payload.get("session_id"), root)
     try:
         if tool.startswith("mcp__"):
             check_mcp(tool, data)
