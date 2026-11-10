@@ -16,7 +16,7 @@ import sys
 # Same list as .github/workflows/guard.yml, plus .git/ (git hooks and config).
 # Includes config files that tools load automatically (make, mise, gitleaks, conftest).
 PROTECTED = re.compile(
-    r"^(benchmarks|\.github|policies|scripts|risk|terraform/bootstrap|\.claude|mcp-servers|\.git|\.config|mise)(/|$)"
+    r"^(benchmarks|evals|\.github|policies|scripts|risk|terraform/bootstrap|\.claude|mcp-servers|\.git|\.config|mise)(/|$)"
     r"|^(docs/agent-log\.md|Makefile|GNUmakefile|makefile|mise\.toml|\.mise\.toml|mise\.local\.toml|\.mise\.local\.toml"
     r"|\.tool-versions|\.terraform-version|\.python-version|\.pre-commit-config\.yaml|\.tflint\.hcl"
     r"|\.gitleaks\.toml|\.gitleaksignore|conftest\.toml|AGENTS\.md|CLAUDE\.md|\.mcp\.json)$"
