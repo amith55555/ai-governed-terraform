@@ -78,6 +78,10 @@ How each task was judged: T1 and T2 from the PR diff and the CI plan (read with
 - `mutation_t4.sh` also counts a mutation as caught if Terraform cannot start. The
   unmutated module must pass first, and none of the 5 mutations breaks the file format.
 - Stop-hook blocks are counted as distinct "attempt N" messages in the session's logs.
+- Since PR #61 (2026-11-10), `main` has a newer `guard.yml` than the tag. GitHub refuses
+  an agent push of a branch made from the tag (most likely because the agent token has
+  no permission to change workflow files), so a new run from the tag would have to rebase
+  on `main` first (agent-log entry 24). All 16 runs were before PR #61.
 - Dollar cost is the API list price of the tokens on the date in `prices.csv`, not
   what a subscription charged.
 - Usage rows written before W3.4 have one cache-write column; it is counted at the
