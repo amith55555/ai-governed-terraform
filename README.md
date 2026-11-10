@@ -7,6 +7,12 @@ It can read, edit, run checks and open pull requests. It **cannot** touch AWS:
 it has no AWS credentials, and only CI, after the owner's approvals, changes
 anything. Every guardrail is tested, and the results below come from real runs.
 
+![Demo: the guard blocks AWS commands, secrets, protected files and a force push, allows normal work, and the risk gate holds a table rename for approval](docs/demo/demo.gif)
+
+The real output of [docs/demo/demo.sh](docs/demo/demo.sh): this repo's pre-tool guard and
+risk gate on fixed inputs. No AWS, nothing changed; run it yourself with
+`bash docs/demo/demo.sh`.
+
 ## How it works
 
 ```mermaid
@@ -142,6 +148,10 @@ every local check, the same ones CI runs: policy tests, unit and attack tests fo
 hooks, the risk gate and tf-check, `fmt`, `validate`, `tflint`, `terraform test` with a
 mock provider, gitleaks, Checkov and the AGENTS.md check. It needs no AWS account.
 `make help` lists all targets.
+
+Checked from a fresh clone on 2026-11-10 (WSL, Ubuntu): `make check` passed in about
+40 seconds and left no changed files. That machine already had the pinned tools in mise's
+cache, so a first install takes longer.
 
 The agent is started with `make agent`, which needs the agent's own GitHub token
 ([ADR 0006](docs/adr/0006-agent-identity.md)) and refuses to start while an AWS session
