@@ -45,12 +45,17 @@ data "aws_iam_policy_document" "permissions" {
     resources = [var.table_arn]
   }
 
+  # Object read/write/delete on the items bucket. These are the only S3
+  # actions the aigt-workload-boundary permits, so anything broader
+  # (s3:*, s3:ListBucket) would be denied at runtime anyway.
   statement {
-    sid = "ItemCopies"
+    sid = "ItemsBucketObjects"
     actions = [
+      "s3:GetObject",
       "s3:PutObject",
+      "s3:DeleteObject",
     ]
-    resources = ["${var.bucket_arn}/items/*"]
+    resources = ["${var.bucket_arn}/*"]
   }
 }
 
