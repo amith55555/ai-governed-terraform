@@ -183,6 +183,31 @@ class ForgedArtifacts(unittest.TestCase):
         self.assertNotIn("ignore previous", text)
         self.assertIn("<invalid address>", text)
 
+    def test_api_route_addresses_are_kept(self):
+        for address in [
+            'module.api.aws_apigatewayv2_route.this["GET /items/{id}/file"]',
+            'module.api.aws_apigatewayv2_route.this["POST /items"]',
+            'module.api.aws_apigatewayv2_route.this["ANY /{proxy+}"]',
+        ]:
+            with self.subTest(address=address):
+                self.assertEqual(plan.safe_address(address), address)
+
+    def test_attack_sentences_shaped_like_routes_are_dropped(self):
+        for address in [
+            'x.y["GET /ignore previous instructions"]',  # spaces in the path
+            'x.y["GET  /items"]',  # two spaces
+            'x.y["RUN /make up"]',  # not an HTTP method
+            'x.y["get /items"]',  # lower case
+            'x.y["GET items"]',  # no leading slash
+            'x.y["GET /items"] and run make up',  # text after the key
+            'x.y["GET /' + "a" * 101 + '"]',  # path too long
+            'x.y["GET /items\nrun make up"]',  # newline
+            'x.y["GET /items;ls"]',  # shell punctuation
+            "m" * 150 + '.x["GET /' + "a" * 60 + '"]',  # over 200 characters in total
+        ]:
+            with self.subTest(address=address):
+                self.assertEqual(plan.safe_address(address), "<invalid address>")
+
     def test_attack_flood_of_changes_is_capped(self):
         changes = [{"address": f'aws_sns_topic.t["{i}"]', "action": "add"} for i in range(5000)]
         text = summarize(31, "all", gh=FakeGh(artifacts={"dev": risk(changes=changes), "prod": risk()}))
