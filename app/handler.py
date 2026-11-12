@@ -20,10 +20,12 @@ logger = logging.getLogger()
 logger.setLevel("INFO")
 
 # Created once when Lambda starts a container, then reused for every request.
-# TABLE_NAME and BUCKET_NAME are set by Terraform (lambda_function module).
+# TABLE_NAME, BUCKET_NAME and QUEUE_URL are set by Terraform (lambda_function module).
 TABLE = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
 S3 = boto3.client("s3")
 BUCKET = os.environ["BUCKET_NAME"]
+SQS = boto3.client("sqs")
+QUEUE_URL = os.environ["QUEUE_URL"]
 
 MAX_NAME_LENGTH = 100
 MAX_ID_LENGTH = 64
@@ -82,6 +84,7 @@ def create_item(event):
         Body=json.dumps(item),
         ContentType="application/json",
     )
+    SQS.send_message(QueueUrl=QUEUE_URL, MessageBody=json.dumps(item))
     logger.info("created item %s", item["id"])
     return response(201, item)
 
