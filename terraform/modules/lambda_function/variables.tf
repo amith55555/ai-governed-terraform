@@ -32,6 +32,20 @@ variable "bucket_arn" {
   description = "ARN of the S3 bucket to be used by the Lambda function"
 }
 
+variable "queue_url" {
+  type        = string
+  description = "URL of the SQS queue the Lambda function sends created items to"
+}
+
+variable "queue_arn" {
+  type        = string
+  description = "ARN of the SQS queue the Lambda function sends created items to"
+  validation {
+    condition     = can(regex("^arn:aws:sqs:[a-z0-9-]+:[0-9]{12}:[a-zA-Z0-9_-]{1,80}$", var.queue_arn))
+    error_message = "queue_arn must be the ARN of a single SQS queue."
+  }
+}
+
 variable "memory_size" {
   type        = number
   description = "Amount of memory in MB allocated to the Lambda function"

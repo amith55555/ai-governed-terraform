@@ -2,7 +2,7 @@
 
 Routes:
   GET  /health       -> {"status": "ok"}
-  POST /items        -> create an item from {"name": "..."}
+  POST /items        -> create an item from {"name": "..."} and send it to the SQS queue
   GET  /items        -> list up to 50 items
   GET  /items/{id}   -> get one item
 """
@@ -24,6 +24,9 @@ logger.setLevel("INFO")
 TABLE = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
 S3 = boto3.client("s3")
 BUCKET = os.environ["BUCKET_NAME"]
+# QUEUE_URL: another service reads created items from this SQS queue.
+SQS = boto3.client("sqs")
+QUEUE_URL = os.environ["QUEUE_URL"]
 
 MAX_NAME_LENGTH = 100
 MAX_ID_LENGTH = 64
@@ -82,6 +85,7 @@ def create_item(event):
         Body=json.dumps(item),
         ContentType="application/json",
     )
+    SQS.send_message(QueueUrl=QUEUE_URL, MessageBody=json.dumps(item))
     logger.info("created item %s", item["id"])
     return response(201, item)
 

@@ -45,6 +45,26 @@ resource "aws_cloudwatch_metric_alarm" "lambda_throttles" {
   ok_actions          = [aws_sns_topic.alarms.arn]
 }
 
+# Any message in the dead-letter queue means a consumer failed it 3 times.
+# Maximum (not Sum) keeps the alarm in ALARM until the DLQ is emptied.
+resource "aws_cloudwatch_metric_alarm" "dlq_not_empty" {
+  alarm_name  = "${var.name_prefix}-items-dlq-not-empty"
+  namespace   = "AWS/SQS"
+  metric_name = "ApproximateNumberOfMessagesVisible"
+  dimensions = {
+    QueueName = var.dlq_name
+  }
+  alarm_description   = "Alarm when the dead-letter queue has any messages"
+  statistic           = "Maximum"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  period              = 300
+  threshold           = 0
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = [aws_sns_topic.alarms.arn]
+  ok_actions          = [aws_sns_topic.alarms.arn]
+}
+
 resource "aws_cloudwatch_metric_alarm" "api_5xx" {
   alarm_name  = "${var.name_prefix}-api-5xx"
   namespace   = "AWS/ApiGateway"

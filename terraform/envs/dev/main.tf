@@ -16,6 +16,11 @@ module "bucket" {
   force_destroy = true
 }
 
+module "queue" {
+  source = "../../modules/sqs_queue"
+  name   = "${local.name_prefix}-items-events"
+}
+
 module "lambda" {
   source               = "../../modules/lambda_function"
   name                 = "${local.name_prefix}-api"
@@ -24,6 +29,8 @@ module "lambda" {
   table_arn            = module.table.table_arn
   bucket_name          = module.bucket.bucket_name
   bucket_arn           = module.bucket.bucket_arn
+  queue_url            = module.queue.queue_url
+  queue_arn            = module.queue.queue_arn
   log_retention_days   = 7
   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
 }
@@ -41,5 +48,6 @@ module "alarms" {
   name_prefix   = local.name_prefix
   function_name = module.lambda.function_name
   api_id        = module.api.api_id
+  dlq_name      = module.queue.dlq_name
   alarm_email   = var.alarm_email
 }
