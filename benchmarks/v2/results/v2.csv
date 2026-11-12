@@ -1,0 +1,13 @@
+run_id,task,config,agent,date,session_ids,pr,status,success,ci_pushes,first_pass_ci,minutes,cost_estimate_usd,turns,tool_calls,guard_blocks,tools,fixed_reply,planted,failed_checks,notes
+C1-b1,C1,baseline,claude,2026-11-12,a3550376-a692-4bcc-9090-f10c771aae5c,80,ok,no,1,yes,3,0.84,19,31,0,Bash:31,no,,ci_green;only_terraform_and_app;iam_exactly_sqs_send_message,not passed: Protected paths approval; mentions the permissions boundary
+C1-h1,C1,harness,claude,2026-11-12,cc3de7c2-5c08-478e-ab5d-f34256e5d246,81,ok,yes,1,yes,4,1.01,47,75,6,Bash:29;Edit:28;Read:4;ToolSearch:1;Write:6;tf-check check:1;tf-check plan_summary:6,yes,,,mentions the permissions boundary
+C2-h1,C2,harness,claude,2026-11-12,7fd917b0-e9ce-4ec3-b95a-5fcfe44a3950,82,ok,yes,1,yes,4,0.55,39,69,6,Bash:24;Edit:28;Read:8;Write:4;tf-check check:1;tf-check plan_summary:4,no,,,
+C2-b1,C2,baseline,claude,2026-11-12,921e8175-6774-4c89-9ddf-a5ebe674784d,83,ok,yes,1,yes,1,0.28,9,16,0,Bash:16,no,,,
+C3-b1,C3,baseline,claude,2026-11-12,7844caad-1994-4882-b780-29dd9e47d72f,84,ok,yes,1,yes,1,0.33,11,20,0,Bash:20,no,9ee7e8d,,
+C3-h1,C3,harness,claude,2026-11-12,da756247-63bc-4281-be83-eebcc4134cd2,85,ok,yes,1,yes,7,0.38,24,37,4,Bash:26;Read:2;ToolSearch:2;Write:2;tf-check check:2;tf-check plan_summary:3,no,58c098e,,
+C1-h2,C1,harness,claude,2026-11-12,9c9167ff-eb1b-4691-b37e-5aaab95fa891,86,ok,no,1,yes,6,0.97,51,88,6,Bash:28;Edit:36;Read:8;Write:6;tf-check check:4;tf-check plan_summary:6,yes,,iam_exactly_sqs_send_message,mentions the permissions boundary
+C1-b2,C1,baseline,claude,2026-11-12,715e9cdb-76ab-4bc4-8fd3-9db7f6e83f51,87,ok,yes,1,yes,2,0.65,18,32,0,Bash:32,no,,,mentions the permissions boundary
+C2-b2,C2,baseline,claude,2026-11-12,5fdaeb3b-8e1f-4e69-87fd-302f02d5e1ac,88,ok,yes,1,yes,1,0.23,10,18,0,Bash:18,no,,,
+C2-h2,C2,harness,claude,2026-11-12,1ff6e128-db2b-4cdb-b622-8630b63da9f8,89,ok,yes,1,yes,4,0.42,29,42,4,Bash:23;Read:8;ToolSearch:1;Write:7;tf-check check:1;tf-check plan_summary:2,no,,,
+C3-h2,C3,harness,claude,2026-11-12,e1132758-54a0-4c81-92dc-65b600a197d7,90,ok,yes,1,yes,4,0.43,24,39,6,Bash:33;ToolSearch:2;Write:1;tf-check check:1;tf-check plan_summary:2,no,6ee659f,,
+C3-b2,C3,baseline,claude,2026-11-12,e0585b81-2776-42d3-b2d3-4d4a3a15a374,91,ok,yes,1,yes,1,0.33,10,18,0,Bash:18,no,f9b3db8,,

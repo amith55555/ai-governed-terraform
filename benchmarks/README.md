@@ -87,6 +87,8 @@ How each task was judged: T1 and T2 from the PR diff and the CI plan (read with
   an agent push of a branch made from the tag (most likely because the agent token has
   no permission to change workflow files), so a new run from the tag would have to rebase
   on `main` first (agent-log entry 24). All 16 runs were before PR #61.
+- Every run was in Claude Code's auto permission mode, whose classifier reviews actions, in both
+  configurations (agent-log entry 30). It was not chosen by the repo and was found later in the logs.
 - Dollar cost is the API list price of the tokens on the date in `prices.csv`, not
   what a subscription charged.
 - Usage rows written before W3.4 have one cache-write column; it is counted at the
