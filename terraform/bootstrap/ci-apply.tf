@@ -147,6 +147,53 @@ data "aws_iam_policy_document" "ci_apply_write" {
     ]
   }
 
+  # CloudFront distribution IDs are random, so the environment is told apart by
+  # the Environment tag (set by default_tags in each env's provider).
+  statement {
+    sid = "CreateCdnDistributions"
+    actions = [
+      "cloudfront:CreateDistribution",
+      "cloudfront:CreateDistributionWithTags",
+      "cloudfront:TagResource",
+    ]
+    resources = ["arn:aws:cloudfront::${var.aws_account_id}:distribution/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Environment"
+      values   = [each.key]
+    }
+  }
+
+  statement {
+    sid = "ManageOwnCdnDistributions"
+    actions = [
+      "cloudfront:UpdateDistribution",
+      "cloudfront:DeleteDistribution",
+      "cloudfront:TagResource",
+      "cloudfront:UntagResource",
+    ]
+    resources = ["arn:aws:cloudfront::${var.aws_account_id}:distribution/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Environment"
+      values   = [each.key]
+    }
+  }
+
+  # Origin access controls cannot be tagged; they only grant what a bucket
+  # policy allows, and bucket policies are limited to this environment's buckets.
+  statement {
+    sid = "CdnOriginAccessControls"
+    actions = [
+      "cloudfront:CreateOriginAccessControl",
+      "cloudfront:UpdateOriginAccessControl",
+      "cloudfront:DeleteOriginAccessControl",
+    ]
+    resources = ["arn:aws:cloudfront::${var.aws_account_id}:origin-access-control/*"]
+  }
+
   statement {
     sid = "RolesOnlyWithBoundary"
     actions = [

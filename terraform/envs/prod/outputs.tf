@@ -18,3 +18,9 @@ output "function_name" {
   description = "Name of the Lambda function"
   value       = module.lambda.function_name
 }
+
+output "files_base_url" {
+  description = "Public HTTPS base URL for item files (CloudFront); append items/<key>"
+  value       = "https://${module.cdn.domain_name}"
+  sensitive   = true
+}

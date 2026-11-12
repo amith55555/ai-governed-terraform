@@ -56,6 +56,28 @@ data "aws_iam_policy_document" "tls_only" {
       values   = ["false"]
     }
   }
+
+  # Optional: let one CloudFront distribution read objects under a prefix (OAC).
+  dynamic "statement" {
+    for_each = var.cloudfront_distribution_arn == null ? [] : [var.cloudfront_distribution_arn]
+    content {
+      sid       = "AllowCloudFrontRead"
+      effect    = "Allow"
+      actions   = ["s3:GetObject"]
+      resources = ["${aws_s3_bucket.this.arn}/${var.cloudfront_read_prefix}*"]
+
+      principals {
+        type        = "Service"
+        identifiers = ["cloudfront.amazonaws.com"]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "AWS:SourceArn"
+        values   = [statement.value]
+      }
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "this" {

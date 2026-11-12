@@ -14,6 +14,16 @@ module "bucket" {
   source        = "../../modules/s3_bucket"
   name          = "${local.name_prefix}-items-${local.bucket_suffix}"
   force_destroy = false
+
+  # Public read of items/* only through CloudFront; the bucket stays private.
+  cloudfront_distribution_arn = module.cdn.distribution_arn
+}
+
+module "cdn" {
+  source                      = "../../modules/cdn"
+  name                        = "${local.name_prefix}-items"
+  bucket_name                 = module.bucket.bucket_name
+  bucket_regional_domain_name = module.bucket.bucket_regional_domain_name
 }
 
 module "lambda" {
