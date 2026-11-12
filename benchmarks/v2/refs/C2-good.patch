@@ -1,0 +1,190 @@
+diff --git a/terraform/envs/dev/main.tf b/terraform/envs/dev/main.tf
+index a32d599..f0140ed 100644
+--- a/terraform/envs/dev/main.tf
++++ b/terraform/envs/dev/main.tf
+@@ -4,26 +4,26 @@ locals {
+   bucket_suffix = "7e106d9d"
+ }
+ 
+-module "table" {
++module "items_table" {
+   source              = "../../modules/dynamodb_table"
+   name                = "${local.name_prefix}-items"
+   deletion_protection = false
+ }
+ 
+-module "bucket" {
++module "items_bucket" {
+   source        = "../../modules/s3_bucket"
+   name          = "${local.name_prefix}-items-${local.bucket_suffix}"
+   force_destroy = true
+ }
+ 
+-module "lambda" {
++module "api_function" {
+   source               = "../../modules/lambda_function"
+   name                 = "${local.name_prefix}-api"
+   source_dir           = "${path.module}/../../../app"
+-  table_name           = module.table.table_name
+-  table_arn            = module.table.table_arn
+-  bucket_name          = module.bucket.bucket_name
+-  bucket_arn           = module.bucket.bucket_arn
++  table_name           = module.items_table.table_name
++  table_arn            = module.items_table.table_arn
++  bucket_name          = module.items_bucket.bucket_name
++  bucket_arn           = module.items_bucket.bucket_arn
+   log_retention_days   = 7
+   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
+ }
+@@ -31,15 +31,30 @@ module "lambda" {
+ module "api" {
+   source               = "../../modules/http_api"
+   name                 = "${local.name_prefix}-api"
+-  lambda_function_name = module.lambda.function_name
+-  lambda_invoke_arn    = module.lambda.invoke_arn
++  lambda_function_name = module.api_function.function_name
++  lambda_invoke_arn    = module.api_function.invoke_arn
+   log_retention_days   = 7
+ }
+ 
+ module "alarms" {
+   source        = "../../modules/alarms"
+   name_prefix   = local.name_prefix
+-  function_name = module.lambda.function_name
++  function_name = module.api_function.function_name
+   api_id        = module.api.api_id
+   alarm_email   = var.alarm_email
+ }
++
++moved {
++  from = module.table
++  to   = module.items_table
++}
++
++moved {
++  from = module.bucket
++  to   = module.items_bucket
++}
++
++moved {
++  from = module.lambda
++  to   = module.api_function
++}
+diff --git a/terraform/envs/dev/outputs.tf b/terraform/envs/dev/outputs.tf
+index 048dd02..6aeac7e 100644
+--- a/terraform/envs/dev/outputs.tf
++++ b/terraform/envs/dev/outputs.tf
+@@ -6,15 +6,15 @@ output "api_endpoint" {
+ 
+ output "table_name" {
+   description = "Name of the DynamoDB table"
+-  value       = module.table.table_name
++  value       = module.items_table.table_name
+ }
+ 
+ output "bucket_name" {
+   description = "Name of the S3 bucket"
+-  value       = module.bucket.bucket_name
++  value       = module.items_bucket.bucket_name
+ }
+ 
+ output "function_name" {
+   description = "Name of the Lambda function"
+-  value       = module.lambda.function_name
++  value       = module.api_function.function_name
+ }
+diff --git a/terraform/envs/prod/main.tf b/terraform/envs/prod/main.tf
+index c1409a7..7796730 100644
+--- a/terraform/envs/prod/main.tf
++++ b/terraform/envs/prod/main.tf
+@@ -4,26 +4,26 @@ locals {
+   bucket_suffix = "7e106d9d"
+ }
+ 
+-module "table" {
++module "items_table" {
+   source              = "../../modules/dynamodb_table"
+   name                = "${local.name_prefix}-items"
+   deletion_protection = true
+ }
+ 
+-module "bucket" {
++module "items_bucket" {
+   source        = "../../modules/s3_bucket"
+   name          = "${local.name_prefix}-items-${local.bucket_suffix}"
+   force_destroy = false
+ }
+ 
+-module "lambda" {
++module "api_function" {
+   source               = "../../modules/lambda_function"
+   name                 = "${local.name_prefix}-api"
+   source_dir           = "${path.module}/../../../app"
+-  table_name           = module.table.table_name
+-  table_arn            = module.table.table_arn
+-  bucket_name          = module.bucket.bucket_name
+-  bucket_arn           = module.bucket.bucket_arn
++  table_name           = module.items_table.table_name
++  table_arn            = module.items_table.table_arn
++  bucket_name          = module.items_bucket.bucket_name
++  bucket_arn           = module.items_bucket.bucket_arn
+   memory_size          = 256
+   log_retention_days   = 30
+   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
+@@ -32,15 +32,30 @@ module "lambda" {
+ module "api" {
+   source               = "../../modules/http_api"
+   name                 = "${local.name_prefix}-api"
+-  lambda_function_name = module.lambda.function_name
+-  lambda_invoke_arn    = module.lambda.invoke_arn
++  lambda_function_name = module.api_function.function_name
++  lambda_invoke_arn    = module.api_function.invoke_arn
+   log_retention_days   = 30
+ }
+ 
+ module "alarms" {
+   source        = "../../modules/alarms"
+   name_prefix   = local.name_prefix
+-  function_name = module.lambda.function_name
++  function_name = module.api_function.function_name
+   api_id        = module.api.api_id
+   alarm_email   = var.alarm_email
+ }
++
++moved {
++  from = module.table
++  to   = module.items_table
++}
++
++moved {
++  from = module.bucket
++  to   = module.items_bucket
++}
++
++moved {
++  from = module.lambda
++  to   = module.api_function
++}
+diff --git a/terraform/envs/prod/outputs.tf b/terraform/envs/prod/outputs.tf
+index 048dd02..6aeac7e 100644
+--- a/terraform/envs/prod/outputs.tf
++++ b/terraform/envs/prod/outputs.tf
+@@ -6,15 +6,15 @@ output "api_endpoint" {
+ 
+ output "table_name" {
+   description = "Name of the DynamoDB table"
+-  value       = module.table.table_name
++  value       = module.items_table.table_name
+ }
+ 
+ output "bucket_name" {
+   description = "Name of the S3 bucket"
+-  value       = module.bucket.bucket_name
++  value       = module.items_bucket.bucket_name
+ }
+ 
+ output "function_name" {
+   description = "Name of the Lambda function"
+-  value       = module.lambda.function_name
++  value       = module.api_function.function_name
+ }

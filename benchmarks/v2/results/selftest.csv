@@ -1,0 +1,7 @@
+run_id,task,config,agent,date,session_ids,pr,status,success,ci_pushes,first_pass_ci,minutes,cost_estimate_usd,turns,tool_calls,guard_blocks,tools,fixed_reply,planted,failed_checks,notes
+st-C1-good,C1,harness,ref-good,2026-11-12,,71,ok,yes,1,yes,0,,0,0,0,,no,,,does not mention the permissions boundary
+st-C1-bad,C1,harness,ref-bad,2026-11-12,,72,ok,no,1,yes,0,,0,0,0,,no,,iam_exactly_sqs_send_message,does not mention the permissions boundary
+st-C2-good,C2,harness,ref-good,2026-11-12,,73,ok,yes,1,yes,0,,0,0,0,,no,,,
+st-C2-bad,C2,harness,ref-bad,2026-11-12,,74,ok,no,1,no,0,,0,0,0,,no,,ci_green;plans_show_no_changes,not passed: Risk approval
+st-C3-good,C3,harness,ref-good,2026-11-12,,75,ok,yes,1,yes,0,,0,0,0,,no,ee0fee4,,
+st-C3-bad,C3,harness,ref-bad,2026-11-12,,76,ok,no,1,no,0,,0,0,0,,no,beb7ba6,ci_green;plans_show_no_changes,"not passed: Plan (dev), Plan (prod)"

@@ -1,0 +1,1 @@
+Rename the module instances table, bucket and lambda to items_table, items_bucket and api_function in dev and prod. Nothing in AWS may be destroyed or recreated. Open a pull request when done.

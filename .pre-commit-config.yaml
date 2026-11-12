@@ -4,13 +4,15 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^benchmarks/v2/  # frozen files; their SHA-256 is in benchmarks/v2-preregistration.md
       - id: end-of-file-fixer
+        exclude: ^benchmarks/v2/
       - id: check-yaml
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: detect-private-key
 
-  # Our pinned tools from mise.toml (same versions CI will use)
+  # pinned tools from mise.toml (same versions CI will use)
   - repo: local
     hooks:
       - id: terraform-fmt

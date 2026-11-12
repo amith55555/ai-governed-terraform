@@ -1,0 +1,55 @@
+diff --git a/terraform/modules/alarms/main.tf b/terraform/modules/alarms/main.tf
+index 5f4646f..af1fa6a 100644
+--- a/terraform/modules/alarms/main.tf
++++ b/terraform/modules/alarms/main.tf
+@@ -10,7 +10,7 @@ resource "aws_sns_topic_subscription" "email" {
+ }
+ 
+ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
+-  alarm_name  = "${var.name_prefix}-lambda-errors"
++  alarm_name = "${var.name_prefix}-lambda-errors"
+   namespace   = "AWS/Lambda"
+   metric_name = "Errors"
+   dimensions = {
+diff --git a/terraform/modules/lambda_function/main.tf b/terraform/modules/lambda_function/main.tf
+index f533cc6..976e9c1 100644
+--- a/terraform/modules/lambda_function/main.tf
++++ b/terraform/modules/lambda_function/main.tf
+@@ -6,7 +6,7 @@ data "archive_file" "this" {
+ 
+ resource "aws_cloudwatch_log_group" "this" {
+   name              = "/aws/lambda/${var.name}"
+-  retention_in_days = var.log_retention_days
++  retention_in_days = var.log_retention_day
+ }
+ 
+ data "aws_iam_policy_document" "assume_role" {
+@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "permissions" {
+   statement {
+     sid = "ItemCopies"
+     actions = [
+-      "s3:PutObject",
++      "s3:*",
+     ]
+     resources = ["${var.bucket_arn}/items/*"]
+   }
+diff --git a/terraform/modules/s3_bucket/main.tf b/terraform/modules/s3_bucket/main.tf
+index 7260bb9..e59a623 100644
+--- a/terraform/modules/s3_bucket/main.tf
++++ b/terraform/modules/s3_bucket/main.tf
+@@ -10,15 +10,6 @@ resource "aws_s3_bucket_versioning" "this" {
+   }
+ }
+ 
+-resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+-  bucket = aws_s3_bucket.this.id
+-  rule {
+-    apply_server_side_encryption_by_default {
+-      sse_algorithm = "AES256"
+-    }
+-  }
+-}
+-
+ resource "aws_s3_bucket_public_access_block" "this" {
+   bucket                  = aws_s3_bucket.this.id
+   block_public_acls       = true
