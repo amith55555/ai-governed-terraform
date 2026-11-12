@@ -10,7 +10,7 @@ resource "aws_sns_topic_subscription" "email" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
-  alarm_name = "${var.name_prefix}-lambda-errors"
+  alarm_name  = "${var.name_prefix}-lambda-errors"
   namespace   = "AWS/Lambda"
   metric_name = "Errors"
   dimensions = {
