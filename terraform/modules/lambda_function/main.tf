@@ -45,12 +45,18 @@ data "aws_iam_policy_document" "permissions" {
     resources = [var.table_arn]
   }
 
+  # Every object action the workload permissions boundary allows
+  # (terraform/bootstrap/boundary.tf, ProjectBucketsObjects), on the whole
+  # bucket. s3:* is not used: the no-wildcard IAM policy forbids it, and the
+  # boundary would cap it at these three actions anyway.
   statement {
-    sid = "ItemCopies"
+    sid = "ItemsBucketObjects"
     actions = [
+      "s3:GetObject",
       "s3:PutObject",
+      "s3:DeleteObject",
     ]
-    resources = ["${var.bucket_arn}/items/*"]
+    resources = ["${var.bucket_arn}/*"]
   }
 }
 
