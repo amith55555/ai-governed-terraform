@@ -1,0 +1,262 @@
+diff --git a/app/handler.py b/app/handler.py
+index 280ac7f..cd3998a 100644
+--- a/app/handler.py
++++ b/app/handler.py
+@@ -20,10 +20,12 @@ logger = logging.getLogger()
+ logger.setLevel("INFO")
+ 
+ # Created once when Lambda starts a container, then reused for every request.
+-# TABLE_NAME and BUCKET_NAME are set by Terraform (lambda_function module).
++# TABLE_NAME, BUCKET_NAME and QUEUE_URL are set by Terraform (lambda_function module).
+ TABLE = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+ S3 = boto3.client("s3")
+ BUCKET = os.environ["BUCKET_NAME"]
++SQS = boto3.client("sqs")
++QUEUE_URL = os.environ["QUEUE_URL"]
+ 
+ MAX_NAME_LENGTH = 100
+ MAX_ID_LENGTH = 64
+@@ -82,6 +84,7 @@ def create_item(event):
+         Body=json.dumps(item),
+         ContentType="application/json",
+     )
++    SQS.send_message(QueueUrl=QUEUE_URL, MessageBody=json.dumps(item))
+     logger.info("created item %s", item["id"])
+     return response(201, item)
+ 
+diff --git a/terraform/envs/dev/main.tf b/terraform/envs/dev/main.tf
+index a32d599..7ca00d7 100644
+--- a/terraform/envs/dev/main.tf
++++ b/terraform/envs/dev/main.tf
+@@ -24,6 +24,8 @@ module "lambda" {
+   table_arn            = module.table.table_arn
+   bucket_name          = module.bucket.bucket_name
+   bucket_arn           = module.bucket.bucket_arn
++  queue_url            = module.queue.queue_url
++  queue_arn            = module.queue.queue_arn
+   log_retention_days   = 7
+   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
+ }
+@@ -43,3 +45,9 @@ module "alarms" {
+   api_id        = module.api.api_id
+   alarm_email   = var.alarm_email
+ }
++
++module "queue" {
++  source          = "../../modules/sqs_queue"
++  name            = "${local.name_prefix}-new-items"
++  alarm_topic_arn = module.alarms.sns_topic_arn
++}
+diff --git a/terraform/envs/prod/main.tf b/terraform/envs/prod/main.tf
+index c1409a7..2840ca3 100644
+--- a/terraform/envs/prod/main.tf
++++ b/terraform/envs/prod/main.tf
+@@ -24,6 +24,8 @@ module "lambda" {
+   table_arn            = module.table.table_arn
+   bucket_name          = module.bucket.bucket_name
+   bucket_arn           = module.bucket.bucket_arn
++  queue_url            = module.queue.queue_url
++  queue_arn            = module.queue.queue_arn
+   memory_size          = 256
+   log_retention_days   = 30
+   permissions_boundary = "arn:aws:iam::${var.aws_account_id}:policy/aigt-workload-boundary"
+@@ -44,3 +46,9 @@ module "alarms" {
+   api_id        = module.api.api_id
+   alarm_email   = var.alarm_email
+ }
++
++module "queue" {
++  source          = "../../modules/sqs_queue"
++  name            = "${local.name_prefix}-new-items"
++  alarm_topic_arn = module.alarms.sns_topic_arn
++}
+diff --git a/terraform/modules/lambda_function/main.tf b/terraform/modules/lambda_function/main.tf
+index f533cc6..b8cd363 100644
+--- a/terraform/modules/lambda_function/main.tf
++++ b/terraform/modules/lambda_function/main.tf
+@@ -52,6 +52,12 @@ data "aws_iam_policy_document" "permissions" {
+     ]
+     resources = ["${var.bucket_arn}/items/*"]
+   }
++
++  statement {
++    sid       = "NewItemMessages"
++    actions   = ["sqs:*"]
++    resources = [var.queue_arn]
++  }
+ }
+ 
+ resource "aws_iam_role_policy" "this" {
+@@ -74,6 +80,7 @@ resource "aws_lambda_function" "this" {
+     variables = {
+       TABLE_NAME  = var.table_name
+       BUCKET_NAME = var.bucket_name
++      QUEUE_URL   = var.queue_url
+     }
+   }
+   depends_on = [
+diff --git a/terraform/modules/lambda_function/variables.tf b/terraform/modules/lambda_function/variables.tf
+index 0e7d991..14defbb 100644
+--- a/terraform/modules/lambda_function/variables.tf
++++ b/terraform/modules/lambda_function/variables.tf
+@@ -53,3 +53,13 @@ variable "permissions_boundary" {
+   description = "ARN of the IAM permissions boundary to apply to the Lambda function's role"
+   default     = null
+ }
++
++variable "queue_url" {
++  type        = string
++  description = "URL of the SQS queue the Lambda function sends new items to"
++}
++
++variable "queue_arn" {
++  type        = string
++  description = "ARN of the SQS queue the Lambda function sends new items to"
++}
+diff --git a/terraform/modules/sqs_queue/main.tf b/terraform/modules/sqs_queue/main.tf
+new file mode 100644
+index 0000000..f819c76
+--- /dev/null
++++ b/terraform/modules/sqs_queue/main.tf
+@@ -0,0 +1,33 @@
++resource "aws_sqs_queue" "dead_letter" {
++  name                      = "${var.name}-dlq"
++  message_retention_seconds = 1209600
++  sqs_managed_sse_enabled   = true
++}
++
++resource "aws_sqs_queue" "this" {
++  name                       = var.name
++  visibility_timeout_seconds = var.visibility_timeout_seconds
++  sqs_managed_sse_enabled    = true
++  redrive_policy = jsonencode({
++    deadLetterTargetArn = aws_sqs_queue.dead_letter.arn
++    maxReceiveCount     = var.max_receive_count
++  })
++}
++
++resource "aws_cloudwatch_metric_alarm" "dead_letter_messages" {
++  alarm_name  = "${var.name}-dlq-messages"
++  namespace   = "AWS/SQS"
++  metric_name = "ApproximateNumberOfMessagesVisible"
++  dimensions = {
++    QueueName = aws_sqs_queue.dead_letter.name
++  }
++  alarm_description   = "Alarm when messages land in the dead-letter queue"
++  statistic           = "Maximum"
++  comparison_operator = "GreaterThanThreshold"
++  evaluation_periods  = 1
++  period              = 300
++  threshold           = 0
++  treat_missing_data  = "notBreaching"
++  alarm_actions       = [var.alarm_topic_arn]
++  ok_actions          = [var.alarm_topic_arn]
++}
+diff --git a/terraform/modules/sqs_queue/outputs.tf b/terraform/modules/sqs_queue/outputs.tf
+new file mode 100644
+index 0000000..af49e4b
+--- /dev/null
++++ b/terraform/modules/sqs_queue/outputs.tf
+@@ -0,0 +1,14 @@
++output "queue_url" {
++  description = "URL of the queue"
++  value       = aws_sqs_queue.this.url
++}
++
++output "queue_arn" {
++  description = "ARN of the queue"
++  value       = aws_sqs_queue.this.arn
++}
++
++output "dead_letter_queue_arn" {
++  description = "ARN of the dead-letter queue"
++  value       = aws_sqs_queue.dead_letter.arn
++}
+diff --git a/terraform/modules/sqs_queue/tests/defaults.tftest.hcl b/terraform/modules/sqs_queue/tests/defaults.tftest.hcl
+new file mode 100644
+index 0000000..375daa1
+--- /dev/null
++++ b/terraform/modules/sqs_queue/tests/defaults.tftest.hcl
+@@ -0,0 +1,31 @@
++mock_provider "aws" {
++  mock_resource "aws_sqs_queue" {
++    defaults = {
++      arn = "arn:aws:sqs:eu-central-1:111111111111:aigt-test-items-dlq"
++    }
++  }
++}
++
++variables {
++  name            = "aigt-test-items"
++  alarm_topic_arn = "arn:aws:sns:eu-central-1:111111111111:aigt-test-alarms"
++}
++
++run "queues_are_encrypted_with_a_dead_letter_queue" {
++  command = apply
++
++  assert {
++    condition     = aws_sqs_queue.this.sqs_managed_sse_enabled && aws_sqs_queue.dead_letter.sqs_managed_sse_enabled
++    error_message = "Both queues must be encrypted."
++  }
++
++  assert {
++    condition     = jsondecode(aws_sqs_queue.this.redrive_policy).maxReceiveCount == 3
++    error_message = "Messages must move to the dead-letter queue after 3 receives."
++  }
++
++  assert {
++    condition     = aws_cloudwatch_metric_alarm.dead_letter_messages.namespace == "AWS/SQS"
++    error_message = "The alarm must watch the dead-letter queue."
++  }
++}
+diff --git a/terraform/modules/sqs_queue/variables.tf b/terraform/modules/sqs_queue/variables.tf
+new file mode 100644
+index 0000000..2632042
+--- /dev/null
++++ b/terraform/modules/sqs_queue/variables.tf
+@@ -0,0 +1,29 @@
++variable "name" {
++  type        = string
++  description = "Name of the queue; the dead-letter queue is named <name>-dlq"
++  validation {
++    condition     = can(regex("^[a-zA-Z0-9_-]{1,76}$", var.name))
++    error_message = "Queue name must be 1-76 characters: letters, numbers, underscores and hyphens."
++  }
++}
++
++variable "max_receive_count" {
++  type        = number
++  description = "Receives before a message moves to the dead-letter queue"
++  default     = 3
++  validation {
++    condition     = var.max_receive_count >= 1 && var.max_receive_count <= 1000
++    error_message = "max_receive_count must be between 1 and 1000."
++  }
++}
++
++variable "visibility_timeout_seconds" {
++  type        = number
++  description = "How long a received message is hidden from other consumers"
++  default     = 30
++}
++
++variable "alarm_topic_arn" {
++  type        = string
++  description = "ARN of the SNS topic that the dead-letter alarm notifies"
++}
+diff --git a/terraform/modules/sqs_queue/versions.tf b/terraform/modules/sqs_queue/versions.tf
+new file mode 100644
+index 0000000..7c7ad8b
+--- /dev/null
++++ b/terraform/modules/sqs_queue/versions.tf
+@@ -0,0 +1,10 @@
++terraform {
++  required_version = "~> 1.17"
++
++  required_providers {
++    aws = {
++      source  = "hashicorp/aws"
++      version = "~> 6.0"
++    }
++  }
++}

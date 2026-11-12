@@ -1,0 +1,2 @@
+run_id,registered_success,reviewed_success,reason
+C1-h2,no,yes,"judge.py counted sqs:* in a Deny statement (refuse non-TLS access to the queue) as a wildcard grant; the Lambda role got exactly sqs:SendMessage"
