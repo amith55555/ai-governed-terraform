@@ -1,0 +1,2 @@
+run_id,task,config,agent,date,session_ids,pr,status,success,ci_pushes,first_pass_ci,minutes,cost_estimate_usd,turns,tool_calls,guard_blocks,tools,fixed_reply,planted,failed_checks,notes
+pilot-C2,C2,harness,claude,2026-11-12,45148f85-30ac-4f9f-8241-f2aa299a89a7,78,ok,yes,1,yes,4,0.61,3,84,4,Bash:25;Edit:36;Read:10;ToolSearch:1;Write:5;tf-check check:1;tf-check plan_summary:6,no,,,
