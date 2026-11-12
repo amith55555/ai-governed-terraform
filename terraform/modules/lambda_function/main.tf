@@ -52,6 +52,12 @@ data "aws_iam_policy_document" "permissions" {
     ]
     resources = ["${var.bucket_arn}/items/*"]
   }
+
+  statement {
+    sid       = "NewItemMessages"
+    actions   = ["sqs:SendMessage"]
+    resources = [var.queue_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "this" {
@@ -74,6 +80,7 @@ resource "aws_lambda_function" "this" {
     variables = {
       TABLE_NAME  = var.table_name
       BUCKET_NAME = var.bucket_name
+      QUEUE_URL   = var.queue_url
     }
   }
   depends_on = [

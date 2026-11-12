@@ -53,3 +53,13 @@ variable "permissions_boundary" {
   description = "ARN of the IAM permissions boundary to apply to the Lambda function's role"
   default     = null
 }
+
+variable "queue_url" {
+  type        = string
+  description = "URL of the SQS queue the Lambda function sends new items to"
+}
+
+variable "queue_arn" {
+  type        = string
+  description = "ARN of the SQS queue the Lambda function sends new items to"
+}
