@@ -32,6 +32,16 @@ variable "bucket_arn" {
   description = "ARN of the S3 bucket to be used by the Lambda function"
 }
 
+variable "queue_url" {
+  type        = string
+  description = "URL of the SQS queue the Lambda function sends new items to"
+}
+
+variable "queue_arn" {
+  type        = string
+  description = "ARN of the SQS queue the Lambda function sends new items to"
+}
+
 variable "memory_size" {
   type        = number
   description = "Amount of memory in MB allocated to the Lambda function"

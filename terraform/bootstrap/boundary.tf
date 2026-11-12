@@ -42,6 +42,13 @@ data "aws_iam_policy_document" "workload_boundary" {
       "arn:aws:s3:::aigt-prod-*/*"
     ]
   }
+
+  statement {
+    sid       = "ProjectQueuesSend"
+    effect    = "Allow"
+    actions   = ["sqs:SendMessage"]
+    resources = ["arn:aws:sqs:${var.region}:${var.aws_account_id}:aigt-*"]
+  }
 }
 
 resource "aws_iam_policy" "workload_boundary" {

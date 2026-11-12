@@ -35,11 +35,19 @@ data "aws_iam_policy_document" "deny_data_reads" {
     ]
     resources = ["*"]
   }
+
+  # Receiving a message also counts toward its tries before the dead-letter queue.
+  statement {
+    sid       = "DenySqsMessageReads"
+    effect    = "Deny"
+    actions   = ["sqs:ReceiveMessage"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "ci_deny_data_reads" {
   name        = "aigt-ci-deny-data-reads"
-  description = "CI roles: deny reading data (S3 object contents except environment state (envs/*), DynamoDB items, log contents). Resource settings stay readable."
+  description = "CI roles: deny reading data (S3 object contents except environment state (envs/*), DynamoDB items, log contents, SQS messages). Resource settings stay readable."
   policy      = data.aws_iam_policy_document.deny_data_reads.json
 }
 

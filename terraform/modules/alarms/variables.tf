@@ -13,6 +13,11 @@ variable "api_id" {
   description = "ID of the HTTP API to which the Lambda function will be attached"
 }
 
+variable "dlq_name" {
+  type        = string
+  description = "Name of the SQS dead-letter queue to alarm on"
+}
+
 variable "alarm_email" {
   type        = string
   description = "Email address to receive alarm notifications"

@@ -31,7 +31,7 @@ flowchart LR
         merge["Merge to main"]
         deploy["Apply dev, then prod<br/>apply roles, OIDC"]
     end
-    aws[("AWS<br/>API Gateway, Lambda,<br/>DynamoDB, S3, alarms")]
+    aws[("AWS<br/>API Gateway, Lambda,<br/>DynamoDB, S3, SQS, alarms")]
 
     owner -- "task" --> agent
     agent -- "every tool call" --> hooks
@@ -163,7 +163,7 @@ GitHub environments `dev`, `prod`, `risk-approval` and `guardrail-approval`.
 
 | Path | Contents |
 |---|---|
-| [`terraform/`](terraform/) | `modules/` (table, bucket, Lambda, HTTP API, alarms), `envs/dev` and `envs/prod`, `bootstrap/` (OIDC, CI roles, permissions boundary) |
+| [`terraform/`](terraform/) | `modules/` (table, bucket, queue with DLQ, Lambda, HTTP API, alarms), `envs/dev` and `envs/prod`, `bootstrap/` (OIDC, CI roles, permissions boundary) |
 | [`app/`](app/) | The Lambda code |
 | [`policies/`](policies/) | Conftest policies with tests |
 | [`risk/`](risk/) | The risk gate |

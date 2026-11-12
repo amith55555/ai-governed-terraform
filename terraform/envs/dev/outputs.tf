@@ -18,3 +18,13 @@ output "function_name" {
   description = "Name of the Lambda function"
   value       = module.lambda.function_name
 }
+
+output "queue_url" {
+  description = "URL of the SQS queue that receives new items"
+  value       = module.queue.queue_url
+}
+
+output "dlq_name" {
+  description = "Name of the SQS dead-letter queue for failed item messages"
+  value       = module.queue.dlq_name
+}

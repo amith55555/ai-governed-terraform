@@ -84,6 +84,12 @@ data "aws_iam_policy_document" "ci_apply_write" {
   }
 
   statement {
+    sid       = "Queues"
+    actions   = ["sqs:*"]
+    resources = ["arn:aws:sqs:${local.region_account}:aigt-${each.key}-*"]
+  }
+
+  statement {
     sid       = "Functions"
     actions   = ["lambda:*"]
     resources = ["arn:aws:lambda:${local.region_account}:function:aigt-${each.key}-*"]
