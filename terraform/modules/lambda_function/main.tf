@@ -6,7 +6,7 @@ data "archive_file" "this" {
 
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/aws/lambda/${var.name}"
-  retention_in_days = var.log_retention_day
+  retention_in_days = var.log_retention_days
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "permissions" {
   statement {
     sid = "ItemCopies"
     actions = [
-      "s3:*",
+      "s3:PutObject",
     ]
     resources = ["${var.bucket_arn}/items/*"]
   }
