@@ -118,14 +118,14 @@ def v2_section(runs, review, usage, prices):
         f"**Benchmark v2** ({len(runs)} runs: {len(V2_TASKS)} harder tasks, 2 configurations, no sub-agents; "
         "details in [benchmarks/v2/](benchmarks/v2/))",
         "",
-        report.table(["Config", "Runs", "Success (judge)", "Success (reviewed)", "First-pass CI", "Minutes",
+        report.table(["Config", "Runs", "Success (automatic)", "Success (reviewed)", "First-pass CI", "Minutes",
                       "Tool calls", "Guard blocks", "Tokens", "Cost per run", "Cost per success"], table_rows),
         "",
         "Averages per run. Cost per success uses the reviewed verdicts.",
         "",
         report.table(["Task", "Success, baseline", "Success, harness", "Cost, baseline", "Cost, harness"], task_rows),
         "",
-        "Pre-registered rule (judge verdicts: 2 more successes, or equal success at a lower cost per success): "
+        "Pre-registered rule (automatic verdicts: 2 more successes, or equal success at a lower cost per success): "
         f"the harness **{'helped' if helped else 'did not help'}**.",
     ]
 

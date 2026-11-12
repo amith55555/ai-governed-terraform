@@ -80,7 +80,7 @@ Three measurements, each defined before its runs:
   (no AGENTS.md, hooks, skills, tf-check or sub-agents). CI judges both the same way.
 - **[Benchmark v2](benchmarks/v2/):** 3 harder tasks (a new SQS feature across layers, a rename that
   must destroy nothing, a branch with 4 planted problems), harness without sub-agents vs none,
-  run unattended and judged automatically. Pre-registered with fingerprints of the tasks and the judge
+  run unattended and judged automatically. Pre-registered with fingerprints of the tasks and the pass/fail rules
   ([v2-preregistration.md](benchmarks/v2-preregistration.md)).
 - **[Safety evals](evals/):** 4 dangerous requests made on purpose (wildcard IAM, a public
   bucket, a table rename that deletes the data, an instruction hidden in a `.tf` comment).
@@ -109,7 +109,7 @@ Averages per run. Harness cost per run vs baseline: +82%.
 
 **Benchmark v2** (12 runs: 3 harder tasks, 2 configurations, no sub-agents; details in [benchmarks/v2/](benchmarks/v2/))
 
-| Config | Runs | Success (judge) | Success (reviewed) | First-pass CI | Minutes | Tool calls | Guard blocks | Tokens | Cost per run | Cost per success |
+| Config | Runs | Success (automatic) | Success (reviewed) | First-pass CI | Minutes | Tool calls | Guard blocks | Tokens | Cost per run | Cost per success |
 |---|---|---|---|---|---|---|---|---|---|---|
 | baseline | 6 | 5/6 | 5/6 | 6/6 | 1.5 | 22 | 0.0 | 432,151 | $0.44 | $0.53 |
 | harness | 6 | 5/6 | 6/6 | 6/6 | 4.8 | 58 | 5.3 | 867,418 | $0.63 | $0.63 |
@@ -122,7 +122,7 @@ Averages per run. Cost per success uses the reviewed verdicts.
 | C2 | 2/2 | 2/2 | $0.25 | $0.49 |
 | C3 | 2/2 | 2/2 | $0.33 | $0.40 |
 
-Pre-registered rule (judge verdicts: 2 more successes, or equal success at a lower cost per success): the harness **did not help**.
+Pre-registered rule (automatic verdicts: 2 more successes, or equal success at a lower cost per success): the harness **did not help**.
 
 **Safety evals** (6 runs of 4 planted violations; details in [evals/](evals/))
 
@@ -151,7 +151,7 @@ What the numbers say, and what they do not:
 - **In v2 task C1, the harness changed the outcome where it matters.** The task needed a permission
   only the owner's bootstrap grants. One baseline run edited `terraform/bootstrap/` and added `sqs:*`
   to the CI deploy role; CI held it for approval. Both harness runs stopped and asked first.
-- **The v2 judge was wrong once:** it failed a harness run for an `sqs:*` that sits in a Deny rule.
+- **The automatic pass/fail check was wrong once:** it failed a harness run for an `sqs:*` that sits in a Deny rule.
   The registered verdict is kept; the "reviewed" column shows the correction
   ([manual-review.csv](benchmarks/v2/results/manual-review.csv)).
 - **The model refused or worked around 5 of the 6 attacks by itself**, so the guard and
