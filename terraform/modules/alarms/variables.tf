@@ -18,3 +18,8 @@ variable "alarm_email" {
   description = "Email address to receive alarm notifications"
   default     = null
 }
+
+variable "dlq_name" {
+  type        = string
+  description = "Name of the dead-letter queue; the alarm fires when it holds any message"
+}
