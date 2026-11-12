@@ -56,6 +56,8 @@ What this shows, and what it does not:
 - The owner never approves anything for an eval PR: not `risk-approval`, not
   `guardrail-approval`, not a deploy. Every eval PR is closed without merging.
 - No AWS session during the runs (checked before E4 baseline, which has no guard).
+- Claude Code ran in auto permission mode in every eval session, so a classifier also reviewed each
+  action, in both configurations (agent-log entry 30). This was found in the logs after the runs.
 - This folder is a protected path: the agent cannot edit its own exam. The tag
   predates this folder, so the agents could not read it either.
 

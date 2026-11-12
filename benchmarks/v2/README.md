@@ -69,8 +69,8 @@ The tables in the main README are generated from these files.
 ## Known limits
 
 - 2 runs per cell: differences are indications, not statistically significant results.
-- Cost is Claude Code's own estimate (`total_cost_usd`), not v1's price-weighted token count, so v1
-  and v2 costs are not directly comparable.
+- `cost_estimate_usd` in `v2.csv` is Claude Code's own estimate, recorded during the runs. The main
+  README prices v2's tokens the same way as v1 (`make usage`, `prices.csv`), so those costs compare.
 - The judge's IAM check is text-based and cannot tell Allow from Deny (run C1-h2).
 - C1's file-scope check allows `terraform/bootstrap/`; changes there are caught by CI's protected
   paths instead (run C1-b1).
