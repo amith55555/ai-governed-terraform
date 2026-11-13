@@ -14,6 +14,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
+PR_URL = "https://github.com/amith55555/ai-governed-terraform/pull/"
 sys.path.insert(0, HERE)
 import report  # noqa: E402
 
@@ -97,7 +98,7 @@ def v2_section(runs, review, usage, prices):
     table_rows = []
     for config, items in by_config.items():
         cps = per_success(items, "reviewed")
-        table_rows.append([config, len(items), report.share(items, "ok"), report.share(items, "reviewed"),
+        table_rows.append([config, len(items), report.share(items, "reviewed"),
                            report.share(items, "first_pass"), f"{report.mean([i['minutes'] for i in items]):.1f}",
                            f"{report.mean([i['tools'] for i in items]):.0f}",
                            f"{report.mean([i['blocks'] for i in items]):.1f}",
@@ -111,22 +112,32 @@ def v2_section(runs, review, usage, prices):
             task_rows.append([task] + [report.share(cells[c], "reviewed") for c in EVAL_CONFIGS]
                              + [f"${report.mean([i['cost'] for i in cells[c]]):.2f}" for c in EVAL_CONFIGS])
     base, harness = by_config["baseline"], by_config["harness"]
-    wins = {c: sum(1 for i in by_config[c] if i["ok"]) for c in EVAL_CONFIGS}
-    helped = wins["harness"] - wins["baseline"] >= 2 or (
-        wins["harness"] == wins["baseline"] and per_success(harness, "ok") < per_success(base, "ok"))
+
+    def rule(key):
+        wins = {c: sum(1 for i in by_config[c] if i[key]) for c in EVAL_CONFIGS}
+        return wins["harness"] - wins["baseline"] >= 2 or (
+            wins["harness"] == wins["baseline"] and per_success(harness, key) < per_success(base, key))
+
+    helped, helped_reviewed = rule("ok"), rule("reviewed")
+    verdict = "helped" if helped else "did not help"
+    if helped == helped_reviewed:
+        rule_text = f"the harness **{verdict}** (same result with the corrected verdicts)."
+    else:
+        rule_text = (f"the harness **{verdict}** by the registered automatic verdicts; with the corrected "
+                     f"verdicts it {'helped' if helped_reviewed else 'did not help'}.")
     return [
         f"**Benchmark v2** ({len(runs)} runs: {len(V2_TASKS)} harder tasks, 2 configurations, no sub-agents; "
         "details in [benchmarks/v2/](benchmarks/v2/))",
         "",
-        report.table(["Config", "Runs", "Success (automatic)", "Success (reviewed)", "First-pass CI", "Minutes",
+        report.table(["Config", "Runs", "Success", "First-pass CI", "Minutes",
                       "Tool calls", "Guard blocks", "Tokens", "Cost per run", "Cost per success"], table_rows),
         "",
-        "Averages per run. Cost per success uses the reviewed verdicts.",
+        "Averages per run. Success is after reading each PR: the automatic check wrongly failed one harness "
+        "run, C1-h2 ([manual-review.csv](benchmarks/v2/results/manual-review.csv)).",
         "",
         report.table(["Task", "Success, baseline", "Success, harness", "Cost, baseline", "Cost, harness"], task_rows),
         "",
-        "Pre-registered rule (automatic verdicts: 2 more successes, or equal success at a lower cost per success): "
-        f"the harness **{'helped' if helped else 'did not help'}**.",
+        "Pre-registered rule (2 more successes, or equal success at a lower cost per success): " + rule_text,
     ]
 
 
@@ -147,7 +158,7 @@ def eval_section(rows):
         key = (row["eval_id"], row["config"])
         seen[key] = seen.get(key, 0) + 1
         name = row["eval_id"] + (f" run {seen[key]}" if total[key] > 1 else "")
-        pr = f"#{row['pr']}" if row["pr"].isdigit() else "none"
+        pr = f"[#{row['pr']}]({PR_URL}{row['pr']})" if row["pr"].isdigit() else "none"
         passed += row["passed"] == "yes"
         lines.append([name, row["config"], pr, row["agent_introduced_violation"], row["first_layer"],
                       row["mergeable_without_approval"], row["passed"]])

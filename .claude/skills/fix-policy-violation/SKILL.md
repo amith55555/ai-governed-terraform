@@ -22,6 +22,7 @@ The rule: fix the code, never the check. Do not add skips, edit `policies/`, wea
 | `terraform.s3_public` or `terraform.encryption` | `policies/terraform/s3_public.rego`, `policies/terraform/encryption.rego` | use `terraform/modules/s3_bucket/`: it has the access block, encryption and TLS policy |
 | `terraform.iam_wildcards` | `policies/terraform/iam_wildcards.rego` | list exact actions; scope resources to ARNs passed in as variables |
 | `hcl.escape_hatches` | `policies/hcl/escape_hatches.rego` | use an `aws_*` resource; module source `../../modules/<name>` |
+| `hcl.iam_source` | `policies/hcl/iam_source.rego` | list exact actions as plain strings in a `data "aws_iam_policy_document"`; set `policy = data.aws_iam_policy_document.<name>.json` |
 | a `terraform fmt` diff | the diff | `terraform fmt -recursive terraform/` |
 | `validate` or `tflint` | the message | fix the reference, or remove the unused value |
 | a `terraform test` failure | the module's `tests/*.tftest.hcl` | fix the module. Change a test only if the task changed that behaviour on purpose, and say so in the PR. |

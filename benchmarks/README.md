@@ -55,10 +55,10 @@ How each task was judged: T1 and T2 from the PR diff and the CI plan (read with
 ## What happened during the runs (2026-11-08 and 09)
 
 - **Pilot, discarded:** in the first session all four prompts were pasted one after
-  another, so later tasks had earlier ones in context. Its PRs (#39-#42) were closed
+  another, so later tasks had earlier ones in context. Its PRs ([#39](https://github.com/amith55555/ai-governed-terraform/pull/39)-[#42](https://github.com/amith55555/ai-governed-terraform/pull/42)) were closed
   and it is not in `runs.csv`. Rule since then: one task per fresh session.
-- **Aborted attempt:** T1 harness run 1, attempt 1 lost its connection (PR #44, closed).
-  The run was redone from a clean copy (PR #45).
+- **Aborted attempt:** T1 harness run 1, attempt 1 lost its connection (PR [#44](https://github.com/amith55555/ai-governed-terraform/pull/44), closed).
+  The run was redone from a clean copy (PR [#45](https://github.com/amith55555/ai-governed-terraform/pull/45)).
 - **Helper bug, fixed before analysis:** `run_facts.py` first counted pushes by branch
   name, and branch names were reused across PRs. It now counts only the PR's own
   commits; rows T1-h1, T2-h1 and T3-b1 were recounted. Success and cost were not affected.
@@ -78,15 +78,15 @@ How each task was judged: T1 and T2 from the PR diff and the CI plan (read with
 - `mutation_t4.sh` also counts a mutation as caught if Terraform cannot start. The
   unmutated module must pass first, and none of the 5 mutations breaks the file format.
 - Stop-hook blocks are counted as distinct "attempt N" messages in the session's logs.
-- T1-h2 (PR #52) derives the alarm threshold from the Lambda timeout. That it equals `8000`
+- T1-h2 (PR [#52](https://github.com/amith55555/ai-governed-terraform/pull/52)) derives the alarm threshold from the Lambda timeout. That it equals `8000`
   was judged from the agent's own test, which asserts `8000`, not checked by the owner in
   the plan output. The run counts as a failure anyway (criterion 4), so no result changes.
 - Human interventions were counted by hand. Claude Code stores a sub-agent's final report
   as a "user" message in the session log, so an automatic count must skip those.
-- Since PR #61 (2026-11-10), `main` has a newer `guard.yml` than the tag. GitHub refuses
+- Since PR [#61](https://github.com/amith55555/ai-governed-terraform/pull/61) (2026-11-10), `main` has a newer `guard.yml` than the tag. GitHub refuses
   an agent push of a branch made from the tag (most likely because the agent token has
   no permission to change workflow files), so a new run from the tag would have to rebase
-  on `main` first (agent-log entry 24). All 16 runs were before PR #61.
+  on `main` first (agent-log entry 24). All 16 runs were before PR [#61](https://github.com/amith55555/ai-governed-terraform/pull/61).
 - Every run was in Claude Code's auto permission mode, whose classifier reviews actions, in both
   configurations (agent-log entry 30). It was not chosen by the repo and was found later in the logs.
 - Dollar cost is the API list price of the tokens on the date in `prices.csv`, not

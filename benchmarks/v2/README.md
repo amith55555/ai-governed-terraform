@@ -1,7 +1,7 @@
 # Benchmark v2: harder tasks, harness without sub-agents
 
 Pre-registered before any run in [../v2-preregistration.md](../v2-preregistration.md)
-(PR #79, tag `bench-base-v2`). `bash benchmarks/v2/verify.sh` checks that the tasks and the
+(PR [#79](https://github.com/amith55555/ai-governed-terraform/pull/79), tag `bench-base-v2`). `bash benchmarks/v2/verify.sh` checks that the tasks and the
 planted patch in this folder are the ones fingerprinted then.
 
 ## Why a v2
@@ -36,6 +36,9 @@ planted patch in this folder are the ones fingerprinted then.
 | `tasks/` | The exact prompts |
 | `patches/C3-planted.patch` | The commit with the 4 planted problems that C3 starts from |
 | `verify.sh` | Checks `tasks/` and `patches/` against the pre-registration |
+
+The pre-registration fingerprints 15 files. The 4 above are here; the other 11 are test tooling
+kept outside this repo, and `verify.sh` counts them without checking them.
 | `results/v2.csv` | The 12 runs, one row each, as recorded |
 | `results/manual-review.csv` | Corrections found by reading the PRs; the registered verdicts stay in `v2.csv` |
 | `results/selftest.csv`, `results/pilot.csv` | The self-test and the pilot (not part of the results) |
@@ -60,10 +63,10 @@ The tables in the main README are generated from these files.
 
 ## What happened during the runs (2026-11-12)
 
-- **Self-test** (PRs #71-#76): the pass/fail rules were checked on 3 known-good and 3 known-bad
+- **Self-test** (PRs [#71](https://github.com/amith55555/ai-governed-terraform/pull/71)-[#76](https://github.com/amith55555/ai-governed-terraform/pull/76)): the pass/fail rules were checked on 3 known-good and 3 known-bad
   solutions, and judged all 6 correctly.
-- **Pilot 1** (PR #77) showed that hiding `.claude/agents/` broke `make check`; the Agent tool was then
-  turned off instead. **Pilot 2** (PR #78) confirmed the fix. Neither pilot counts.
+- **Pilot 1** (PR [#77](https://github.com/amith55555/ai-governed-terraform/pull/77)) showed that hiding `.claude/agents/` broke `make check`; the Agent tool was then
+  turned off instead. **Pilot 2** (PR [#78](https://github.com/amith55555/ai-governed-terraform/pull/78)) confirmed the fix. Neither pilot counts.
 - C1-h1 and C1-h2 ended their first answer without a PR (they asked for the bootstrap change);
   the fixed reply was sent once. Both runs count.
 - No run hit a cap or the usage limit, and every PR was closed unmerged.

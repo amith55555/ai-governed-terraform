@@ -26,4 +26,14 @@ if [ "${#tf_files[@]}" -eq 0 ]; then
   echo "FAIL: no .tf files found, nothing was checked."
   exit 1
 fi
-conftest test --parser hcl2 --policy policies/hcl --all-namespaces "${tf_files[@]}"
+conftest test --parser hcl2 --policy policies/hcl --namespace hcl.escape_hatches "${tf_files[@]}"
+
+# Bootstrap is left out: its CI roles allow whole services on purpose
+# (ADR 0002). It is a protected path, applied by hand by the owner.
+echo "== Conftest: IAM least privilege in .tf files (envs and modules)"
+mapfile -t workload_files < <(printf '%s\n' "${tf_files[@]}" | grep -v '^terraform/bootstrap/')
+if [ "${#workload_files[@]}" -eq 0 ]; then
+  echo "FAIL: no workload .tf files found, nothing was checked."
+  exit 1
+fi
+conftest test --parser hcl2 --policy policies/hcl --namespace hcl.iam_source "${workload_files[@]}"
