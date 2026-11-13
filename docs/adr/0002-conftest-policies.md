@@ -11,7 +11,7 @@ its own rules, enforced in CI, that an agent cannot talk its way around.
 
 ## Decision
 
-Five policies, each with passing and failing unit tests (`conftest verify`):
+Six policies, each with passing and failing unit tests (`conftest verify`):
 
 | Policy | Input | Where it runs | What it blocks |
 |---|---|---|---|
@@ -20,20 +20,32 @@ Five policies, each with passing and failing unit tests (`conftest verify`):
 | `terraform/encryption.rego` | plan JSON | Plan jobs | Buckets without SSE (AES256 or KMS), buckets without a TLS-only bucket policy |
 | `terraform/iam_wildcards.rego` | plan JSON | Plan jobs | Allow statements with wildcard actions, `Resource "*"`, `NotAction`/`NotResource`; broad AWS managed policies |
 | `hcl/escape_hatches.rego` | `.tf` source | Static checks, before `terraform init` | Provisioners; resource/data types other than `aws_*`/`archive_*`; module sources other than `../../modules/<name>`; providers other than `hashicorp/aws` and `hashicorp/archive` |
+| `hcl/iam_source.rego` | `.tf` source of `envs/` and `modules/` | Static checks | In Allow statements of `aws_iam_policy_document`: wildcard actions (any service), `resources = ["*"]`, `not_*` keys, public principals. Actions written through variables, `dynamic` statements, merged JSON, and any `policy` or `assume_role_policy` not taken from a policy document |
 
 The escape-hatch policy reads source, not the plan, because `data "external"`,
 `data "http"` and third-party providers run code during `init` and `plan`,
 while the Plan job holds AWS credentials. `.tf.json` files are forbidden so
 the HCL check cannot be skipped.
 
+`iam_source.rego` (added 2026-11-12) closes a gap in `iam_wildcards.rego`: a policy
+that names a resource created in the same plan is "known after apply", so the plan
+policy cannot read it (agent-log entry 26). The source always shows the actions. To
+keep them readable, policies must be written as `aws_iam_policy_document` with plain
+strings. A Deny statement may use wildcards (the TLS-only bucket policy needs `s3:*`
+and principal `*`). `terraform/bootstrap` is not checked: its CI roles allow whole
+services on purpose (limited by name prefix and a permissions boundary), and changes to
+it wait for `guardrail-approval`.
+
 ## Known limits
 
 - Values unknown at plan time (for example ARNs of resources not created
   yet) are missing from the plan JSON. For a new bucket, the policy text
   cannot be checked (S3 R4, encryption E2); only its presence is. For a new
-  IAM policy, the wildcard check is skipped with a warning. Checkov scans
-  the source in both cases, and the public access block (S3 R1) makes AWS
-  reject public bucket policies anyway.
+  IAM policy, the plan wildcard check is skipped with a warning; the source
+  policy (`iam_source.rego`) checks the actions instead. The public access
+  block (S3 R1) makes AWS reject public bucket policies anyway.
+- The source policy reads only what is written as a plain string. A resource ARN
+  passed in through a variable is checked only in the plan, when it is known.
 - `terraform/bootstrap` is never planned in CI, so only Checkov and the
   source policy see it. Bootstrap is applied by hand and is a protected path.
 - Encryption covers S3 only: DynamoDB, CloudWatch Logs and Lambda

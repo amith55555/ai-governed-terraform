@@ -74,7 +74,7 @@ Two sub-agents in [.claude/agents/](.claude/agents/). Each starts with a fresh c
 | R1 | `make check` passes before you say a task is done | [stop_require_check.py](.claude/hooks/stop_require_check.py); CI runs the same targets ([pr.yml](.github/workflows/pr.yml)) |
 | R2 | Tags `Project`, `Environment`, `ManagedBy` come from provider `default_tags` | [tags.rego](policies/terraform/tags.rego) |
 | R3 | S3 buckets: public access block (all four true), encryption, TLS-only policy | [s3_public.rego](policies/terraform/s3_public.rego), [encryption.rego](policies/terraform/encryption.rego), Checkov |
-| R4 | IAM: exact actions on exact ARNs; no `*`, no `NotAction`, no admin or `*FullAccess` policies | [iam_wildcards.rego](policies/terraform/iam_wildcards.rego) |
+| R4 | IAM: exact actions on exact ARNs; no `*`, no `NotAction`, no admin or `*FullAccess` policies; write policies as `aws_iam_policy_document` with plain-string actions | [iam_wildcards.rego](policies/terraform/iam_wildcards.rego) on the plan, [iam_source.rego](policies/hcl/iam_source.rego) on the source |
 | R5 | Name resources `aigt-<env>-<name>` | CI apply roles only manage `aigt-<env>-*` ([ci-apply.tf](terraform/bootstrap/ci-apply.tf)) |
 | R6 | Deleting or replacing the table or bucket, or turning off their protection, is stated in the PR | owner approval for high risk ([risk_gate.py](risk/risk_gate.py)) |
 | R7 | Env differences only through module inputs in `envs/*/main.tf` | advisory |

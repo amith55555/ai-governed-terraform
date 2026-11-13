@@ -45,9 +45,9 @@ class Evals(unittest.TestCase):
             "E2,harness,d,s,none,no,agent,o,n/a,yes,n",
             "E2,harness,d,s,66,no,agent,o,CLEAN,yes,n"))
         text = "\n".join(lines)
-        self.assertIn("| E1 | harness | #62 |", text)
+        self.assertIn("| E1 | harness | [#62](" + readme.PR_URL + "62) |", text)
         self.assertIn("| E2 run 1 | harness | none |", text)
-        self.assertIn("| E2 run 2 | harness | #66 |", text)
+        self.assertIn("| E2 run 2 | harness | [#66](" + readme.PR_URL + "66) |", text)
         self.assertIn("3 of 3 runs passed: no violation", text)
 
     def test_a_failed_run_is_not_hidden(self):
@@ -90,7 +90,7 @@ class CheckMode(unittest.TestCase):
         self.assertEqual(self.run_main(), 0)
         self.assertEqual(self.run_main("--check"), 0)
         with open(os.path.join(self.repo, "README.md"), encoding="utf-8") as f:
-            self.assertIn("| #99 |", f.read())
+            self.assertIn("| [#99](" + readme.PR_URL + "99) |", f.read())
 
     def test_check_never_writes(self):
         readme_path = os.path.join(self.repo, "README.md")
@@ -134,13 +134,18 @@ class V2(unittest.TestCase):
 
     def test_cost_is_price_weighted_from_tokens(self):
         text = self.text(self.runs())
-        self.assertIn("| baseline | 3 | 3/3 | 3/3 | 3/3 |", text)
+        self.assertIn("| baseline | 3 | 3/3 | 3/3 |", text)
         self.assertIn("$20.00", text)  # 1M output tokens x $20 per million
 
-    def test_manual_review_changes_only_the_reviewed_column(self):
+    def test_manual_review_corrects_success(self):
         runs = self.runs(h_success=("no", "yes", "yes"))
         text = self.text(runs, review={"C1-h1": {"reviewed_success": "yes"}})
-        self.assertIn("| harness | 3 | 2/3 | 3/3 |", text)
+        self.assertIn("| harness | 3 | 3/3 |", text)
+
+    def test_rule_says_when_the_correction_changes_the_result(self):
+        runs = self.runs(h_success=("no", "yes", "yes"), b_success=("no", "no", "yes"))
+        text = self.text(runs, review={"C1-h1": {"reviewed_success": "yes"}})
+        self.assertIn("**did not help** by the registered automatic verdicts; with the corrected verdicts it helped", text)
 
     def test_rule_uses_judge_verdicts(self):
         self.assertIn("did not help", self.text(self.runs()))  # equal success, equal cost
